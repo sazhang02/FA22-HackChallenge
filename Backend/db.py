@@ -4,15 +4,19 @@ db = SQLAlchemy()
 
 
 class User(db.Model):
-    __tablename__ = "users"
+    __tablename__ = "user"
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String, nullable = False)
     email = db.Column(db.String, nullable = False)
     credit = db.Column(db.Integer, nullable = False)
     rating = db.Column(db.Integer, nullable = False)
     profile_image_url= db.Column(db.String)
-    lend_items = db.relationship("Item", cascade="delete")
-    # borrow_items = db.relationship("Item", cascade="delete")
+
+    lend_items_id = db.Column(db.Integer, db.ForeignKey("item.id"))
+    borrow_items_id = db.Column(db.Integer, db.ForeignKey("item.id"))
+
+    lend_items = db.relationship("Item", cascade="delete", foreign_keys=[lend_items_id], uselist=True)
+    borrow_items = db.relationship("Item", cascade="delete", foreign_keys=[borrow_items_id], uselist=True)
 
     def serialize(self):
         """
@@ -26,7 +30,7 @@ class User(db.Model):
             "rating": self.rating,
             "profile_image_url": self.profile_image_url,
             "lend_items": [a.partial_serialize() for a in self.lend_items], 
-            # "borrow_items":[a.partial_serialize() for a in self.borrow_items]
+            "borrow_items":[a.partial_serialize() for a in self.borrow_items]
         }
     def partial_serialize(self):
         """
@@ -41,10 +45,10 @@ class User(db.Model):
         }
 
 class Item(db.Model):
-    __tablename__ = "items"
+    __tablename__ = "item"
     id = db.Column(db.Integer, primary_key=True)
     itemname = db.Column(db.String, nullable = False)
-    lender_id = db.Column(db.Integer, db.ForeignKey("users.id"))
+    # lender_id = db.Column(db.Integer, db.ForeignKey("users.id"))
     # borrower_id = db.Column(db.Integer, db.ForeignKey("users.id"))
     end_date = db.Column(db.DateTime(timezone=True), nullable = False)
     return_date = db.Column(db.DateTime(timezone=True), nullable = False)
@@ -61,7 +65,7 @@ class Item(db.Model):
                 "id": self.id,        
                 "itemname": self.itemname,        
                 "due_date": self.due_date, 
-                "lender": User.query.filter_by(id = self.lender_id).first().partial_serialize(),
+                # "lender": User.query.filter_by(id = self.lender_id).first().partial_serialize(),
                 "end_date": self.end_date,
                 "credit_value": self.credit_value,
                 "post_type":"Lend",
