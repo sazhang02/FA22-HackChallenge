@@ -111,47 +111,57 @@ def get_all_items():
 @app.route("/api/items/<int:user_id>/", methods=["POST"])
 def create_item(user_id):
     """
-    create a item
+    Endpoint for creating an item by user_id
     """
     user = User.query.filter_by(id= user_id).first()
     if user is None:
-        return failure_response("user not found")
+        return failure_response("This user was not found")
     body = json.loads(request.data)
-    iname=body.get('itemname')
-    value = body.get('credit_value')
-    is_borrow_type = body.get('is_borrow_type')
-    if is_borrow_type:
-        b_id = body.get('borrower_id')
-        r_date = body.get('return_date')
-        new_item = Item(
-            itemname = iname,
-            borrower_id = b_id,
-            return_date = r_date,
-            credit_value = value,
-            is_borrow_type = True,
-            is_unfulfilled = True
-        )
-    else:
-        l_id = body.get('lender_id')
-        e_date = body.get('end_date')
-        new_item = Item(
-            itemname = iname,
-            lender_id = l_id,
-            end_date = e_date,
-            credit_value = value,
-            is_borrow_type = False,
-            is_unfulfilled = True)
 
+    # Process request body if the user IS found
+    item_name = body.get("item_name")
+    # due_date = body.get("due_date")
+    location = body.get("location")
+    credit_value = body.get("credit_value")
+    is_borrow_type = body.get("is_borrow_type")
+    image_url = body.get("image_url")
+
+    # Check if request input is valid
+    if (item_name is None or 
+        # due_date is None or 
+        location is None or
+        credit_value is None or
+        is_borrow_type is None):
+        return failure_response("Missing parameters!", 400)
+
+    # Create an item
+    new_item = Item(
+        item_name = item_name,
+        # due_date = due_date,
+        location = location,
+        poster_id = user_id,
+        credit_value = credit_value,
+        is_borrow_type = is_borrow_type,
+        image_url = image_url
+    )
+
+    # Add item to the user's lending/borrowing list
+    if is_borrow_type:
+        user.borrow_items.append(new_item)
+    else: 
+        user.lend_items.append(new_item)
+
+    # Add item to Item database
     db.session.add(new_item)
     db.session.commit()
     return success_response(new_item.serialize(), 201)
 
 # @app.route("/api/items/")
-def get_all_lending_items(user_id):
-    lst = []
-    for item in Item.query.filter_by(is_borrow_type=False).all():
-        lst.append(item.serialize())
-    return success_response(lst, 201)
+# def get_all_lending_items(user_id):
+#     lst = []
+#     for item in Item.query.filter_by(is_borrow_type=False).all():
+#         lst.append(item.serialize())
+#     return success_response(lst, 201)
 
 
 if __name__ == "__main__":

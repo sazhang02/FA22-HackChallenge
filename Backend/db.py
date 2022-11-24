@@ -22,6 +22,19 @@ class User(db.Model):
     lend_items = db.relationship("Item", cascade="delete", foreign_keys=[lend_items_id], uselist=True)
     borrow_items = db.relationship("Item", cascade="delete", foreign_keys=[borrow_items_id], uselist=True)
 
+    def public_serialize(self):
+        """
+        Serializes a User without account specific information -- lend_items 
+        and borrow_items
+        """
+        return {
+            "id": self.id,
+            "username": self.username,
+            "credit": self.credit,
+            "rating": self.rating,
+            "profile_image_url": self.profile_image_url
+        }
+
     def serialize(self):
         """
         constructs users with all fields as a python dictionary
@@ -33,20 +46,10 @@ class User(db.Model):
             "credit": self.credit,
             "rating": self.rating,
             "profile_image_url": self.profile_image_url,
-            "lend_items": [a.partial_serialize() for a in self.lend_items], 
-            "borrow_items":[a.partial_serialize() for a in self.borrow_items]
+            "lend_items": [a.public_serialize() for a in self.lend_items], 
+            "borrow_items":[a.public_serialize() for a in self.borrow_items]
         }
-    def partial_serialize(self):
-        """
-        constructs users without course field as a python dictionary
-        """
-        return {
-            "id": self.id,
-            "username": self.username,
-            "credit": self.credit,
-            "rating": self.rating,
-            "profile_image_url": self.profile_image_url
-        }
+
 
 class Item(db.Model):
     """
@@ -54,40 +57,64 @@ class Item(db.Model):
     Has a many-to-many relationship with User model
     """
     __tablename__ = "item"
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement = True)
     item_name = db.Column(db.String, nullable = False)
-    # lender_id = db.Column(db.Integer, db.ForeignKey("users.id"))
-    # borrower_id = db.Column(db.Integer, db.ForeignKey("users.id"))
-    # end_date = db.Column(db.DateTime(timezone=True), nullable = False)
-    # return_date = db.Column(db.DateTime(timezone=True), nullable = False)
+    # due_date = db.Column(db.DateTime(timezone=True), nullable = False)
+    location = item_name = db.Column(db.String, nullable = False)
+
+    poster_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable = False)
+    fulfiller_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable = True)
+
     credit_value = db.Column(db.Integer, nullable = False)
     is_borrow_type = db.Column(db.Boolean, nullable = False)
     is_unfulfilled = db.Column(db.Boolean, nullable = False)
+    image_url = db.Column(db.String, nullable = True)
+
+    def __init__(self, **kwargs):
+        """
+        Initializes a Item object
+        """
+        self.item_name = kwargs.get("item_name")
+        # TODO: imlement datetime functionality
+        # self.due_date = kwargs.get("due_date")
+        self.location = kwargs.get("location")
+        self.poster_id = kwargs.get("poster_id")
+        self.fulfiller_id = None
+        self.credit_value = kwargs.get("credit_value")
+        self.is_borrow_type = kwargs.get("is_borrow_type")
+        self.is_unfulfilled = True
+        self.image_url = kwargs.get("image_url")
 
     def serialize(self):    
         """
-        constructs assignment with all fields as a python dictionary
+        Serializes a Item object
         """
-        if self.post_type == True:
-            return {        
-                "id": self.id,        
-                "item_name": self.item_name,        
-                "due_date": self.due_date, 
-                # "lender": User.query.filter_by(id = self.lender_id).first().partial_serialize(),
-                "end_date": self.end_date,
-                "credit_value": self.credit_value,
-                "is_borrow_type":self.is_borrow_type,
-                "is_unfulfilled": self.is_unfulfilled}
-  
-        return {        
-        "id": self.id,        
-        "item_name": self.item_name,        
-        "due_date": self.due_date, 
-        # "borrower": User.query.filter_by(id = self.borrower_id).first().partial_serialize(),
-        "return_date": self.return_date,
-        "credit_value": self.credit_value,
-        "is_borrow_type":self.is_borrow_type,
-        "is_unfulfilled": self.is_unfulfilled}
-        
+        poster_user = User.query.filter_by(id = self.poster_id).first()
+        serialized_poster = poster_user.public_serialize()
+        if self.fulfiller_id != None:
+            fulfiller_user = User.query.filter_by(id = self.fulfiller_id).first()
+            serialized_fulfiller = fulfiller_user.public_serialize()
+        else:
+            serialized_fulfiller = None
+        return {
+            "id": self.id,
+            # "item_name": self.item_name,
+            # "due_date": self.due_date,
+            "location": self.location,
+            "poster_user": serialized_poster,
+            "fulfiller_user": serialized_fulfiller,
+            "credit_value": self.credit_value,
+            "is_borrow_type": self.is_borrow_type,
+            "is_unfulfilled": self.is_unfulfilled,
+            "image_url": self.image_url
+        }
 
-
+    def public_serialize(self):
+        """
+        Serializes an Item without transaction specific information
+        """
+        return {
+            "id": self.id,
+            # TODO: for some reason item name is not json serializable
+            # "item_name": self.item_name
+        }

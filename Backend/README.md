@@ -139,15 +139,12 @@ Response:
 Request:
 ```
 {
-  "item_name": "Umbrella"
-  "due_date": "Dec-3-2022",
-  "location": "Central",
-  "borrower_id": 2,
-  "lender_id": 1,
-  "credit_value": 5,
-  "is_borrow_type": true,
-  "is_unfulfilled": true,
-  "image_url": "www.umbrella-jpg.com"
+  "item_name" : "Umbrella",
+  "location" : "Central",
+  "credit_value" : 5,
+  "is_borrow_type" : true,
+  "is_unfulfilled" : true,
+  "image_url" : "www.image.com"
 }
 ```
 There needs to be at least one of either lender_id or borrower_id. image_url is optional.
@@ -169,19 +166,19 @@ Response:
 ```
 <HTTP STATUS CODE 201>
 {
-  "items": [
-      {
-        "id": 1
-        "item_name": "Umbrella"
-        "due_date": "Dec-3-2022",
-        "location": "Central",
-        "borrower_id": 2,
-        "lender_id": 1,
-        "credit_value": 5,
-        "is_borrow_type": true,
-        "is_unfulfilled": true,
-        "image_url": "www.umbrella-jpg.com"
-      }
-  ]
+    "id": 1,
+    "location": "Central",
+    "poster_user": {
+        "id": 1,
+        "username": "uname",
+        "credit": 20,
+        "rating": 5,
+        "profile_image_url": null
+    },
+    "fulfiller_user": null,
+    "credit_value": 5,
+    "is_borrow_type": true,
+    "is_unfulfilled": true,
+    "image_url": "www.image.com"
 }
 ```
