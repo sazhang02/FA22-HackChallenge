@@ -25,6 +25,15 @@ with app.app_context():
 
 # your routes here
 
+@app.route("/api/users/") # TODO: Delete later, for testing
+def get_all_users():
+    """
+    Endpoint for getting all users
+    """
+    users = [user.serialize() for user in User.query.all()]
+    return success_response({"users": users})
+
+
 @app.route("/api/users/", methods=["POST"])
 def create_user():
     """
@@ -46,17 +55,6 @@ def create_user():
     db.session.add(new_user)
     db.session.commit()
     return success_response(new_user.serialize(), 201)
-
-
-@app.route("/api/users/")
-def get_courses():
-    """
-    Endpoint for getting all users
-    """
-    users = [user.serialize() for user in User.query.all()]
-    return success_response({"users": users})
-
-
 
 @app.route("/api/users/<int:user_id>/")
 def get_user(user_id):
@@ -148,7 +146,6 @@ def get_all_lending_items(user_id):
     for item in Item.query.filter_by(is_borrow_type=False).all():
         lst.append(item.serialize())
     return success_response(lst, 201)
-
 
 
 if __name__ == "__main__":
