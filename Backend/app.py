@@ -47,6 +47,17 @@ def create_user():
     db.session.commit()
     return success_response(new_user.serialize(), 201)
 
+
+@app.route("/api/users/")
+def get_courses():
+    """
+    Endpoint for getting all users
+    """
+    users = [user.serialize() for user in User.query.all()]
+    return success_response({"users": users})
+
+
+
 @app.route("/api/users/<int:user_id>/")
 def get_user(user_id):
     """

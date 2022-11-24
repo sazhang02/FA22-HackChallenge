@@ -12,7 +12,7 @@ class User(db.Model):
     rating = db.Column(db.Integer, nullable = False)
     profile_image_url= db.Column(db.String)
     lend_items = db.relationship("Item", cascade="delete")
-    borrow_items = db.relationship("Item", cascade="delete")
+    # borrow_items = db.relationship("Item", cascade="delete")
 
     def serialize(self):
         """
@@ -26,7 +26,7 @@ class User(db.Model):
             "rating": self.rating,
             "profile_image_url": self.profile_image_url,
             "lend_items": [a.partial_serialize() for a in self.lend_items], 
-            "borrow_items":[a.partial_serialize() for a in self.borrow_items]
+            # "borrow_items":[a.partial_serialize() for a in self.borrow_items]
         }
     def partial_serialize(self):
         """
@@ -45,7 +45,7 @@ class Item(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     itemname = db.Column(db.String, nullable = False)
     lender_id = db.Column(db.Integer, db.ForeignKey("users.id"))
-    borrower_id = db.Column(db.Integer, db.ForeignKey("users.id"))
+    # borrower_id = db.Column(db.Integer, db.ForeignKey("users.id"))
     end_date = db.Column(db.DateTime(timezone=True), nullable = False)
     return_date = db.Column(db.DateTime(timezone=True), nullable = False)
     credit_value = db.Column(db.Integer, nullable = False)
@@ -71,7 +71,7 @@ class Item(db.Model):
         "id": self.id,        
         "itemname": self.itemname,        
         "due_date": self.due_date, 
-        "borrower": User.query.filter_by(id = self.borrower_id).first().partial_serialize(),
+        # "borrower": User.query.filter_by(id = self.borrower_id).first().partial_serialize(),
         "return_date": self.return_date,
         "credit_value": self.credit_value,
         "post_type":"Borrow",
