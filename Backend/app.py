@@ -47,7 +47,7 @@ def create_user():
         username= uname,
         email=e,
         credit=20,
-        rating=0,
+        rating=5,
         profile_image_url=None,
         )
 
@@ -66,7 +66,7 @@ def get_user(user_id):
     return success_response(user.serialize())
 
 
-@app.route("/api/users/<int:user_id>/delete/", methods = ['DELETE'])
+@app.route("/api/users/<int:user_id>/", methods = ['DELETE'])
 def delete_user(user_id):
     """
     delete a user
@@ -100,8 +100,15 @@ def update_user(user_id):
 
     return success_response(user.serialize(), 201)
 
+@app.route("/api/items/") # TODO: Delete later, for testing
+def get_all_items():
+    """
+    Endpoint for getting all users
+    """
+    items = [item.serialize() for item in Item.query.all()]
+    return success_response({"items": items})
 
-@app.route("/api/users/<int:user_id>/item/", methods=["POST"])
+@app.route("/api/items/<int:user_id>/", methods=["POST"])
 def create_item(user_id):
     """
     create a item
@@ -139,7 +146,7 @@ def create_item(user_id):
     db.session.commit()
     return success_response(new_item.serialize(), 201)
 
-@app.route("/api/items/")
+# @app.route("/api/items/")
 def get_all_lending_items(user_id):
     lst = []
     for item in Item.query.filter_by(is_borrow_type=False).all():
