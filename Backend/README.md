@@ -1,6 +1,4 @@
-# FA22-HackChallenge
-
-### USER ENDPOINTS
+# USER ENDPOINTS
 ## Get all users
 **GET** `/api/users/`
 Response:
@@ -104,4 +102,4 @@ Response:
 }
 ```
 
-### ITEM ENDPOINTS
+# ITEM ENDPOINTS
