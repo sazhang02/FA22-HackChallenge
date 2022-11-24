@@ -103,3 +103,64 @@ Response:
 ```
 
 # ITEM ENDPOINTS
+## Get all items
+**GET** `/api/items/`
+Response:
+```
+<HTTP STATUS CODE 200>
+{
+  "items": [
+      {
+        "id": 1
+        "name": "Umbrella"
+        "due_date": "Dec-3-2022",
+        "location": "Central",
+        "borrower_id": 2,
+        "lender_id": 1,
+        "credit_value": 5,
+        "is_borrow_type": true,
+        "is_unfulfilled": true,
+        "image_url": "www.umbrella-jpg.com"
+      }
+  ]
+}
+```
+## Create an item by user id
+**POST** `/api/items/{id}/`
+Request:
+```
+{
+  "id": 1
+  "item_name": "Umbrella"
+  "due_date": "Dec-3-2022",
+  "location": "Central",
+  "borrower_id": 2,
+  "lender_id": 1,
+  "credit_value": 5,
+  "is_borrow_type": true,
+  "is_unfulfilled": true,
+  "image_url": "www.umbrella-jpg.com"
+}
+```
+There needs to be at least one of either lender_id or borrowing_id. image_url is optional.
+
+Response:
+```
+<HTTP STATUS CODE 201>
+{
+  "items": [
+      {
+        "id": 1
+        "item_name": "Umbrella"
+        "due_date": "Dec-3-2022",
+        "location": "Central",
+        "borrower_id": 2,
+        "lender_id": 1,
+        "credit_value": 5,
+        "is_borrow_type": true,
+        "is_unfulfilled": true,
+        "image_url": "www.umbrella-jpg.com"
+      }
+  ]
+}
+```

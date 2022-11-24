@@ -55,7 +55,7 @@ class Item(db.Model):
     """
     __tablename__ = "item"
     id = db.Column(db.Integer, primary_key=True)
-    itemname = db.Column(db.String, nullable = False)
+    item_name = db.Column(db.String, nullable = False)
     # lender_id = db.Column(db.Integer, db.ForeignKey("users.id"))
     # borrower_id = db.Column(db.Integer, db.ForeignKey("users.id"))
     # end_date = db.Column(db.DateTime(timezone=True), nullable = False)
@@ -71,7 +71,7 @@ class Item(db.Model):
         if self.post_type == True:
             return {        
                 "id": self.id,        
-                "itemname": self.itemname,        
+                "item_name": self.item_name,        
                 "due_date": self.due_date, 
                 # "lender": User.query.filter_by(id = self.lender_id).first().partial_serialize(),
                 "end_date": self.end_date,
@@ -81,7 +81,7 @@ class Item(db.Model):
   
         return {        
         "id": self.id,        
-        "itemname": self.itemname,        
+        "item_name": self.item_name,        
         "due_date": self.due_date, 
         # "borrower": User.query.filter_by(id = self.borrower_id).first().partial_serialize(),
         "return_date": self.return_date,
