@@ -103,6 +103,54 @@ def update_user(user_id):
 
     return success_response(user.serialize(), 201)
 
+
+@app.route("/api/users/<int:user_id>/item/", methods=["POST"])
+def create_item(user_id):
+    """
+    create a item
+    """
+    user = User.query.filter_by(id= user_id).first()
+    if user is None:
+        return failure_response("user not found")
+    body = json.loads(request.data)
+    iname=body.get('itemname')
+    value = body.get('credit_value')
+    is_borrow_type = body.get('is_borrow_type')
+    if is_borrow_type:
+        b_id = body.get('borrower_id')
+        r_date = body.get('return_date')
+        new_item = Item(
+            itemname = iname,
+            borrower_id = b_id,
+            return_date = r_date,
+            credit_value = value,
+            is_borrow_type = True,
+            is_unfulfilled = True
+        )
+    else:
+        l_id = body.get('lender_id')
+        e_date = body.get('end_date')
+        new_item = Item(
+            itemname = iname,
+            lender_id = l_id,
+            end_date = e_date,
+            credit_value = value,
+            is_borrow_type = False,
+            is_unfulfilled = True)
+
+    db.session.add(new_item)
+    db.session.commit()
+    return success_response(new_item.serialize(), 201)
+
+@app.route("/api/items/")
+def get_all_lending_items(user_id):
+    lst = []
+    for item in Item.query.filter_by(is_borrow_type=False).all():
+        lst.append(item.serialize())
+    return success_response(lst, 201)
+
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8000, debug=True)
 

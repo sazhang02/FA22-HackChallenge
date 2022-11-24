@@ -46,11 +46,11 @@ class Item(db.Model):
     itemname = db.Column(db.String, nullable = False)
     lender_id = db.Column(db.Integer, db.ForeignKey("users.id"))
     # borrower_id = db.Column(db.Integer, db.ForeignKey("users.id"))
-    end_date = db.Column(db.DateTime(timezone=True), nullable = False)
-    return_date = db.Column(db.DateTime(timezone=True), nullable = False)
+    # end_date = db.Column(db.DateTime(timezone=True), nullable = False)
+    # return_date = db.Column(db.DateTime(timezone=True), nullable = False)
     credit_value = db.Column(db.Integer, nullable = False)
-    post_type = db.Column(db.Boolean, nullable = False)
-    post_status = db.Column(db.Boolean, nullable = False)
+    is_borrow_type = db.Column(db.Boolean, nullable = False)
+    is_unfulfilled = db.Column(db.Boolean, nullable = False)
 
     def serialize(self):    
         """
@@ -64,8 +64,8 @@ class Item(db.Model):
                 "lender": User.query.filter_by(id = self.lender_id).first().partial_serialize(),
                 "end_date": self.end_date,
                 "credit_value": self.credit_value,
-                "post_type":"Lend",
-                "post_status": "Unfulfilled"}
+                "is_borrow_type":self.is_borrow_type,
+                "is_unfulfilled": self.is_unfulfilled}
   
         return {        
         "id": self.id,        
@@ -74,8 +74,8 @@ class Item(db.Model):
         # "borrower": User.query.filter_by(id = self.borrower_id).first().partial_serialize(),
         "return_date": self.return_date,
         "credit_value": self.credit_value,
-        "post_type":"Borrow",
-        "post_status": "Unfulfilled"
-    }
+        "is_borrow_type":self.is_borrow_type,
+        "is_unfulfilled": self.is_unfulfilled}
+        
 
 
