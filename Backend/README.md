@@ -147,8 +147,6 @@ Request:
   "image_url" : "www.image.com"
 }
 ```
-There needs to be at least one of either lender_id or borrower_id. image_url is optional.
-
 There are two types of posts: borrow and lend. If is_borrow_type is true, then this is a request to borrow an item. Otherwise, this is a offer to lend an item.
 
 due_date can have the following meanings based on the type of post:
@@ -157,10 +155,9 @@ due_date can have the following meanings based on the type of post:
 
 There are two different types of posts: unfulfilled and in progress. 
 
-If is_unfulfilled is true, then this is no one has responded to this post -- no one has accepting this borrow request or no one has took this offer to lend an item. This also means there should be one of lender_id or borrower_id with
-a valid id integer and the other should be None.
+If is_unfulfilled is true, then this is no one has responded to this post -- no one has accepting this borrow request or no one has took this offer to lend an item.
 
-Otherwise, we know that this post is in progress -- there are two users that are working on this shared "transaction". This also means both lender_id and borrower_id should have a valid id integer. When the transaction is completed, it will be removed from our database (no history).
+Otherwise, we know that this post is in progress -- there are two users that are working on this shared "transaction". When the transaction is completed, it will be removed from our database (no history).
 
 Response:
 ```
