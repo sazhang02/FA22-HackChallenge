@@ -6,7 +6,7 @@ import os
 
 
 app = Flask(__name__)
-db_filename = "cms.db"
+db_filename = "ShareVerse.db"
 
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///%s" % db_filename
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
