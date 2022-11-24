@@ -1,6 +1,7 @@
 # USER ENDPOINTS
 ## Get all users
 **GET** `/api/users/`
+
 Response:
 ```
 <HTTP STATUS CODE 200>
@@ -21,6 +22,7 @@ Response:
 ```
 ## Get user by id
 **GET** `/api/users/{id}/`
+
 Response:
 ```
 <HTTP STATUS CODE 200>
@@ -37,6 +39,7 @@ Response:
 ```
 ## Create a user
 **POST** `/api/users/`
+
 Request:
 ```
 {
@@ -44,6 +47,7 @@ Request:
   "email": "shareverse@gmail.com",
 }
 ```
+
 Response:
 ```
 <HTTP STATUS CODE 201>
@@ -61,6 +65,7 @@ Response:
 
 ## Update user by id
 **POST** `/api/users/{id}/`
+
 Request:
 ```
 {
@@ -70,6 +75,7 @@ Request:
 }
 ```
 Note: All three parameters in the request body are optional
+
 Response:
 ```
 <HTTP STATUS CODE 200>
@@ -87,6 +93,7 @@ Response:
 
 ## Delete user by id
 **DELETE** `/api/users/{id}/`
+
 Response:
 ```
 <HTTP STATUS CODE 200>
@@ -105,6 +112,7 @@ Response:
 # ITEM ENDPOINTS
 ## Get all items
 **GET** `/api/items/`
+
 Response:
 ```
 <HTTP STATUS CODE 200>
@@ -127,10 +135,10 @@ Response:
 ```
 ## Create an item by user id
 **POST** `/api/items/{id}/`
+
 Request:
 ```
 {
-  "id": 1
   "item_name": "Umbrella"
   "due_date": "Dec-3-2022",
   "location": "Central",
