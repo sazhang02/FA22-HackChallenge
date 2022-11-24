@@ -4,6 +4,10 @@ db = SQLAlchemy()
 
 
 class User(db.Model):
+    """
+    User Model
+    Has a one-to-many relationship with Item model
+    """
     __tablename__ = "user"
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String, nullable = False)
@@ -45,6 +49,10 @@ class User(db.Model):
         }
 
 class Item(db.Model):
+    """
+    Item Model
+    Has a many-to-many relationship with User model
+    """
     __tablename__ = "item"
     id = db.Column(db.Integer, primary_key=True)
     itemname = db.Column(db.String, nullable = False)
