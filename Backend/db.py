@@ -23,7 +23,6 @@ class User(db.Model):
     lend_items = db.relationship("Item", cascade="delete", foreign_keys=[lend_items_id], uselist=True)
     borrow_items = db.relationship("Item", cascade="delete", foreign_keys=[borrow_items_id], uselist=True)
     saved_items = db.relationship("Item", cascade="delete", foreign_keys=[saved_items_id], uselist=True)
-    # TODO: add saved items?
 
     def public_serialize(self):
         """

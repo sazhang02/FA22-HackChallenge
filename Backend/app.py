@@ -79,7 +79,7 @@ def delete_user(user_id):
         return failure_response("user not found", 404)
     db.session.delete(user)
     db.session.commit()
-    return success_response(user.serialize(), )
+    return success_response(user.serialize(), 201)
 
 
 @app.route("/api/users/<int:user_id>/", methods = ['POST'])
@@ -169,10 +169,11 @@ def create_item(user_id):
     # Add item to the user's lending/borrowing list
     if is_borrow_type == True:
         print("<><><><><><><><><>><<><<><<><><><><>><",user.borrow_items)
-        user.borrow_items.append(new_item)
+        print("<><><><><><><><><>><<><<><<><><><><>><type type type type type",type(user.borrow_items))
+        # user.borrow_items.append(new_item)
         print("<><><><><><><><><>><<><<><<><><><><>><",user.borrow_items)
     else: 
-        user.lend_items.append(new_item)
+        # user.lend_items.append(new_item)
         print("<><><><><><><><><>><<><<><<><><><><>><",user.lend_items)
 
     # Add item to Item database
@@ -182,6 +183,9 @@ def create_item(user_id):
 
 @app.route("/api/items/lend")
 def get_all_lending_items():
+    """
+    get all the lending items in database
+    """
     lst = []
     for item in Item.query.filter_by(is_borrow_type=False).all():
         lst.append(item.serialize())
@@ -189,10 +193,53 @@ def get_all_lending_items():
 
 @app.route("/api/items/borrow")
 def get_all_borrowing_items():
+    """
+    get all the borrowing items in database
+    """
     lst = []
     for item in Item.query.filter_by(is_borrow_type=True).all():
         lst.append(item.serialize())
     return success_response(lst, 201)
+
+@app.route("/api/items/users/<int:user_id>/lend")
+def get_user_lending_items(user_id):
+    """
+    get all of the user's lending items
+    """
+    user = User.query.filter_by(id= user_id).first()
+    if user is None:
+        return failure_response("This user was not found")
+    lend_items = []
+    for a in user.lend_items:
+        lend_items.append(a.public_serialize())
+        print("===============",a.public_serialize())
+    return lend_items
+
+@app.route("/api/items/users/<int:user_id>/borrow")
+def get_user_borrowing_items(user_id):
+    """
+    get all of the user's borrowing items
+    """
+    user = User.query.filter_by(id= user_id).first()
+    if user is None:
+        return failure_response("This user was not found")
+    borrow_items = []
+    for a in user.borrow_items:
+        borrow_items.append(a.public_serialize())
+    return borrow_items
+
+@app.route("/api/items/users/<int:user_id>/saved")
+def get_user_saved_items(user_id):
+    """
+    get all of the user's saved items
+    """
+    user = User.query.filter_by(id= user_id).first()
+    if user is None:
+        return failure_response("This user was not found")
+    saved_items = []
+    for a in user.saved_items:
+        saved_items.append(a.public_serialize())
+    return saved_items
 
 @app.route("/api/users/<int:user_id>/<int:item_id>", methods = ['POST'])
 def update_item(user_id, item_id):
@@ -224,7 +271,7 @@ def update_item(user_id, item_id):
     db.session.commit()
     return success_response(item.serialize(), 201)
 
-@app.route("/api/users/<int:user_id>/<int:item_id>/save", methods = ['POST'])
+@app.route("/api/users/<int:user_id>/<int:item_id>/saved", methods = ['POST'])
 def save_item(user_id, item_id):
     """
     save an item with to user's saved_items list
@@ -235,9 +282,25 @@ def save_item(user_id, item_id):
     item = Item.query.filter_by(id= item_id).first()
     if item is None:
         return failure_response("item not found")
+    if item in user.saved_items:
+        return failure_response("item already saved")
     user.saved_items.append(item)
     db.session.commit()
     return success_response(user.serialize(), 201)
+
+@app.route("/api/users/<int:user_id>/<int:item_id>/delete/", methods = ['DELETE'])
+def delete_item(user_id, item_id):
+    """
+    delete an item
+    """
+    item = Item.query.filter_by(id= item_id).first()
+    if item is None:
+        return failure_response("item not found")
+    if item.poster_id != user_id:
+        return failure_response("user does not have permission to edit this post")
+    db.session.delete(item)
+    db.session.commit()
+    return success_response(item.serialize(), 201)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8000, debug=True)
