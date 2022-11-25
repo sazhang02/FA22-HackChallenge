@@ -18,9 +18,11 @@ class User(db.Model):
 
     lend_items_id = db.Column(db.Integer, db.ForeignKey("item.id"))
     borrow_items_id = db.Column(db.Integer, db.ForeignKey("item.id"))
+    saved_items_id = db.Column(db.Integer, db.ForeignKey("item.id"))
 
     lend_items = db.relationship("Item", cascade="delete", foreign_keys=[lend_items_id], uselist=True)
     borrow_items = db.relationship("Item", cascade="delete", foreign_keys=[borrow_items_id], uselist=True)
+    saved_items = db.relationship("Item", cascade="delete", foreign_keys=[saved_items_id], uselist=True)
     # TODO: add saved items?
 
     def public_serialize(self):
@@ -40,6 +42,19 @@ class User(db.Model):
         """
         constructs users with all fields as a python dictionary
         """
+        print(type(self.lend_items))
+
+        lend_items = []
+        for a in self.lend_items:
+            lend_items.append(a.public_serialize())
+
+        borrow_items = []
+        for a in self.borrow_items:
+            borrow_items.append(a.public_serialize())
+
+        saved_items = []
+        for a in self.saved_items:
+            saved_items.append(a.public_serialize())
         return {
             "id": self.id,
             "username": self.username,
@@ -47,8 +62,9 @@ class User(db.Model):
             "credit": self.credit,
             "rating": self.rating,
             "profile_image_url": self.profile_image_url,
-            "lend_items": [a.public_serialize() for a in self.lend_items], 
-            "borrow_items":[a.public_serialize() for a in self.borrow_items]
+            "lend_items": lend_items,
+            "borrow_items":borrow_items,
+            "saved_items":saved_items
         }
 
 
@@ -59,10 +75,9 @@ class Item(db.Model):
     """
     __tablename__ = "item"
     id = db.Column(db.Integer, primary_key=True, autoincrement = True)
-    item_name = db.Column(db.String, nullable = False)
-    # due_date = db.Column(db.DateTime(timezone=True), nullable = False)
-    location = item_name = db.Column(db.String, nullable = False)
-
+    itemname = db.Column(db.String, nullable = False)
+    due_date = db.Column(db.DateTime(timezone=True), nullable = False)
+    location = db.Column(db.String, nullable = False)
     poster_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable = False)
     fulfiller_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable = True)
 
@@ -71,20 +86,20 @@ class Item(db.Model):
     is_unfulfilled = db.Column(db.Boolean, nullable = False)
     image_url = db.Column(db.String, nullable = True)
 
-    def __init__(self, **kwargs):
-        """
-        Initializes a Item object
-        """
-        self.item_name = kwargs.get("item_name")
-        # TODO: imlement datetime functionality
-        # self.due_date = kwargs.get("due_date")
-        self.location = kwargs.get("location")
-        self.poster_id = kwargs.get("poster_id")
-        self.fulfiller_id = None
-        self.credit_value = kwargs.get("credit_value")
-        self.is_borrow_type = kwargs.get("is_borrow_type")
-        self.is_unfulfilled = True
-        self.image_url = kwargs.get("image_url")
+    # def __init__(self, **kwargs):
+    #     """
+    #     Initializes a Item object
+    #     """
+    #     # self.item_name = kwargs.get("item_name")
+    #     # TODO: imlement datetime functionality
+    #     # self.due_date = kwargs.get("due_date")
+    #     self.location = kwargs.get("location")
+    #     self.poster_id = kwargs.get("poster_id")
+    #     self.fulfiller_id = None
+    #     self.credit_value = kwargs.get("credit_value")
+    #     self.is_borrow_type = kwargs.get("is_borrow_type")
+    #     self.is_unfulfilled = True
+    #     self.image_url = kwargs.get("image_url")
 
     def serialize(self):    
         """
@@ -92,15 +107,15 @@ class Item(db.Model):
         """
         poster_user = User.query.filter_by(id = self.poster_id).first()
         serialized_poster = poster_user.public_serialize()
-        if self.fulfiller_id != None:
+        if self.fulfiller_id is not None:
             fulfiller_user = User.query.filter_by(id = self.fulfiller_id).first()
             serialized_fulfiller = fulfiller_user.public_serialize()
         else:
             serialized_fulfiller = None
         return {
             "id": self.id,
-            # "item_name": self.item_name,
-            # "due_date": self.due_date,
+            "itemname": self.itemname,
+            "due_date": self.due_date.strftime('%m/%d/%Y %H'),
             "location": self.location,
             "poster_user": serialized_poster,
             "fulfiller_user": serialized_fulfiller,
@@ -116,6 +131,5 @@ class Item(db.Model):
         """
         return {
             "id": self.id,
-            # TODO: for some reason item name is not json serializable
-            # "item_name": self.item_name
+            "itemname": self.itemname
         }

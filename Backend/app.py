@@ -3,6 +3,7 @@ from db import Item, User, db
 from flask import Flask, request
 import json 
 import os
+from datetime import datetime
 
 
 app = Flask(__name__)
@@ -24,7 +25,8 @@ with app.app_context():
 
 # your routes here
 
-@app.route("/api/users/") # TODO: Delete later, for testing
+# @app.route("/api/users/") # TODO: Delete later, for testing
+@app.route("/api/users/")
 def get_all_users():
     """
     Endpoint for getting all users
@@ -32,6 +34,13 @@ def get_all_users():
     users = [user.serialize() for user in User.query.all()]
     return success_response({"users": users})
 
+@app.route("/api/users1/")
+def get_all_users1():
+    """
+    Endpoint for getting all users
+    """
+    users = [user.serialize() for user in User1.query.all()]
+    return success_response({"users": users})
 
 @app.route("/api/users/", methods=["POST"])
 def create_user():
@@ -66,7 +75,7 @@ def get_user(user_id):
     return success_response(user.serialize())
 
 
-@app.route("/api/users/<int:user_id>/", methods = ['DELETE'])
+@app.route("/api/users/<int:user_id>/delete/", methods = ['DELETE'])
 def delete_user(user_id):
     """
     delete a user
@@ -119,50 +128,110 @@ def create_item(user_id):
     body = json.loads(request.data)
 
     # Process request body if the user IS found
-    item_name = body.get("item_name")
-    # due_date = body.get("due_date")
+    itemname = body.get("itemname")
+    due_date_str = body.get("due_date")
     location = body.get("location")
     credit_value = body.get("credit_value")
     is_borrow_type = body.get("is_borrow_type")
     image_url = body.get("image_url")
 
     # Check if request input is valid
-    if (item_name is None or 
-        # due_date is None or 
+    if (
+        itemname is None or 
+        due_date_str is None or 
         location is None or
         credit_value is None or
         is_borrow_type is None):
         return failure_response("Missing parameters!", 400)
-
+    try:
+        due_date = datetime.strptime(due_date_str, '%m/%d/%Y %H')
+        if due_date < datetime.now():
+            return failure_response("please enter a date in the future", 400)
+    except:
+        return failure_response("due_date not in proper format! Please enter Month/Day/Year hour[in 24 hour format]. ex '09/19/18 13'", 400)
     # Create an item
     new_item = Item(
-        item_name = item_name,
-        # due_date = due_date,
+        itemname = itemname,
+        due_date = due_date,
         location = location,
         poster_id = user_id,
         credit_value = credit_value,
         is_borrow_type = is_borrow_type,
-        image_url = image_url
+        image_url = image_url,
+        is_unfulfilled = True
     )
 
     # Add item to the user's lending/borrowing list
-    if is_borrow_type:
+    if is_borrow_type == True:
+        print("<><><><><><><><><>><<><<><<><><><><>><",user.borrow_items)
         user.borrow_items.append(new_item)
+        print("<><><><><><><><><>><<><<><<><><><><>><",user.borrow_items)
     else: 
         user.lend_items.append(new_item)
+        print("<><><><><><><><><>><<><<><<><><><><>><",user.lend_items)
 
     # Add item to Item database
     db.session.add(new_item)
     db.session.commit()
     return success_response(new_item.serialize(), 201)
 
-# @app.route("/api/items/")
-# def get_all_lending_items(user_id):
-#     lst = []
-#     for item in Item.query.filter_by(is_borrow_type=False).all():
-#         lst.append(item.serialize())
-#     return success_response(lst, 201)
+@app.route("/api/items/lend")
+def get_all_lending_items():
+    lst = []
+    for item in Item.query.filter_by(is_borrow_type=False).all():
+        lst.append(item.serialize())
+    return success_response(lst, 201)
 
+@app.route("/api/items/borrow")
+def get_all_borrowing_items():
+    lst = []
+    for item in Item.query.filter_by(is_borrow_type=True).all():
+        lst.append(item.serialize())
+    return success_response(lst, 201)
+
+@app.route("/api/users/<int:user_id>/<int:item_id>", methods = ['POST'])
+def update_item(user_id, item_id):
+    """
+    update an item with id item_id
+    """
+   
+    item = Item.query.filter_by(id= item_id).first()
+    if item is None:
+        return failure_response("item not found")
+    body = json.loads(request.data)
+    if item.poster_id != user_id:
+        return failure_response("user does not have permission to edit this post")
+    itemname = body.get("itemname")
+    # due_date = due_date,
+    location = body.get("location")
+
+    credit_value = body.get("credit_value")
+    image_url = body.get("image_url")
+
+    if itemname is not None:
+        item.itemname = itemname
+    if location is not None:
+        item.location =location
+    if credit_value is not None:
+        item.credit_value = credit_value
+    if image_url is not None:
+        item.image_url = image_url
+
+    return success_response(item.serialize(), 201)
+
+@app.route("/api/users/<int:user_id>/<int:item_id>/save", methods = ['POST'])
+def save_item(user_id, item_id):
+    """
+    save an item with to user's saved_items list
+    """
+    user = User.query.filter_by(id= user_id).first()
+    if user is None:
+        return failure_response("user not found")
+    item = Item.query.filter_by(id= item_id).first()
+    if item is None:
+        return failure_response("item not found")
+    user.saved_items.append(item)
+    return success_response(user.serialize(), 201)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8000, debug=True)
