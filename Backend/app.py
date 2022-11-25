@@ -1,8 +1,7 @@
-from re import T
+from re import T, fullmatch
 from db import Item, User, db
 from flask import Flask, request
 import json 
-import os
 from datetime import datetime
 
 
@@ -12,7 +11,7 @@ db_filename = "ShareVerse.db"
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///%s" % db_filename
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SQLALCHEMY_ECHO"] = True
-
+email_regex = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
 def success_response(data, code=200):
     return json.dumps(data), code
 
@@ -34,13 +33,6 @@ def get_all_users():
     users = [user.serialize() for user in User.query.all()]
     return success_response({"users": users})
 
-@app.route("/api/users1/")
-def get_all_users1():
-    """
-    Endpoint for getting all users
-    """
-    users = [user.serialize() for user in User1.query.all()]
-    return success_response({"users": users})
 
 @app.route("/api/users/", methods=["POST"])
 def create_user():
@@ -52,6 +44,8 @@ def create_user():
     e=body.get('email')
     if uname is None or e is None:
         return failure_response("please provide a username and email",400)
+    if not fullmatch(email_regex, e):
+        return failure_response("email not valid", 400)
     new_user = User(
         username= uname,
         email=e,
@@ -102,20 +96,31 @@ def update_user(user_id):
     image=body.get("profile_image_url")
     if uname is not None:
         user.username = uname
-    if e is not None:
+    if e is not None and fullmatch(email_regex, e):
         user.email =e
     if image is not None:
         user.profile_image_url = image
-
+    db.session.commit()
     return success_response(user.serialize(), 201)
 
 @app.route("/api/items/") # TODO: Delete later, for testing
 def get_all_items():
     """
-    Endpoint for getting all users
+    Endpoint for getting all items
     """
     items = [item.serialize() for item in Item.query.all()]
     return success_response({"items": items})
+
+@app.route("/api/items/<int:item_id>/") 
+def get_item(item_id):
+    """
+    Endpoint for getting an item 
+    """
+    item = Item.query.filter_by(id=item_id).first()
+    if item is None:
+        return failure_response("item not found")
+    return success_response(item.serialize())
+
 
 @app.route("/api/items/<int:user_id>/", methods=["POST"])
 def create_item(user_id):
@@ -201,22 +206,22 @@ def update_item(user_id, item_id):
     body = json.loads(request.data)
     if item.poster_id != user_id:
         return failure_response("user does not have permission to edit this post")
-    itemname = body.get("itemname")
+    iname = body.get("itemname")
     # due_date = due_date,
     location = body.get("location")
 
     credit_value = body.get("credit_value")
     image_url = body.get("image_url")
 
-    if itemname is not None:
-        item.itemname = itemname
+    if iname is not None:
+        item.itemname = iname
     if location is not None:
         item.location =location
     if credit_value is not None:
         item.credit_value = credit_value
     if image_url is not None:
         item.image_url = image_url
-
+    db.session.commit()
     return success_response(item.serialize(), 201)
 
 @app.route("/api/users/<int:user_id>/<int:item_id>/save", methods = ['POST'])
@@ -231,6 +236,7 @@ def save_item(user_id, item_id):
     if item is None:
         return failure_response("item not found")
     user.saved_items.append(item)
+    db.session.commit()
     return success_response(user.serialize(), 201)
 
 if __name__ == "__main__":
