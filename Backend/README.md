@@ -210,7 +210,6 @@ Request:
     "location":"Central Campus",
     "credit_value":5,
     "is_borrow_type":true,
-    "is_unfulfilled" : true,
     "image_url":"image.jpg",
     "due_date":"12/1/23 12"
 }
@@ -234,16 +233,16 @@ Response:
 ```
 <HTTP STATUS CODE 201>
 {
-    "id": 1,
+    "id": <ID>,
     "item_name": "Umbrella",
     "due_date": "12/01/2023 12",
     "location": "Central Campus",
     "poster_user": {
-        "id": 1,
-        "username": "new_username_2022",
-        "credit": 20,
-        "rating": 5,
-        "profile_image_url": "www.mynewprofileimage.com"
+        "id": <user_id>,
+        "username": <USER NAME>,
+        "credit": <USER CREDIT>,
+        "rating": <USER RATING>,
+        "profile_image_url": <USER PROFILE IMAGE>
     },
     "fulfiller_user": null,
     "credit_value": 5,
