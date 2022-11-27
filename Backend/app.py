@@ -22,9 +22,15 @@ db.init_app(app)
 with app.app_context():
     db.create_all()
 
-# your routes here
+# --------------------------------------------------------------
+# --------------------------------------------------------------
+# ----------------------- USER ENDPOINTS -----------------------
+# --------------------------------------------------------------
+# --------------------------------------------------------------
 
-# @app.route("/api/users/") # TODO: Delete later, for testing
+# --------------------------------------------------------------
+# ------------------------- GET REQUESTS -----------------------
+# --------------------------------------------------------------
 @app.route("/api/users/")
 def get_all_users():
     """
@@ -33,6 +39,20 @@ def get_all_users():
     users = [user.serialize() for user in User.query.all()]
     return success_response({"users": users})
 
+
+@app.route("/api/users/<int:user_id>/")
+def get_user(user_id):
+    """
+    get a specific user by id user_id
+    """
+    user = User.query.filter_by(id=user_id).first()
+    if user is None:
+        return failure_response("user not found")
+    return success_response(user.serialize())
+
+# --------------------------------------------------------------
+# ------------------------ POST REQUESTS -----------------------
+# --------------------------------------------------------------
 
 @app.route("/api/users/", methods=["POST"])
 def create_user():
@@ -58,29 +78,6 @@ def create_user():
     db.session.commit()
     return success_response(new_user.serialize(), 201)
 
-@app.route("/api/users/<int:user_id>/")
-def get_user(user_id):
-    """
-    get a specific user
-    """
-    user = User.query.filter_by(id=user_id).first()
-    if user is None:
-        return failure_response("user not found")
-    return success_response(user.serialize())
-
-
-@app.route("/api/users/<int:user_id>/delete/", methods = ['DELETE'])
-def delete_user(user_id):
-    """
-    delete a user
-    """
-    user=User.query.filter_by(id=user_id).first()
-    if user is None:
-        return failure_response("user not found", 404)
-    db.session.delete(user)
-    db.session.commit()
-    return success_response(user.serialize(), 201)
-
 
 @app.route("/api/users/<int:user_id>/", methods = ['POST'])
 def update_user(user_id):
@@ -103,6 +100,35 @@ def update_user(user_id):
     db.session.commit()
     return success_response(user.serialize(), 201)
 
+# --------------------------------------------------------------
+# ------------------------- DELETE REQUESTS -----------------------
+# --------------------------------------------------------------
+
+@app.route("/api/users/<int:user_id>/", methods = ['DELETE'])
+def delete_user(user_id):
+    """
+    delete a user
+    """
+    user=User.query.filter_by(id=user_id).first()
+    if user is None:
+        return failure_response("user not found", 404)
+    db.session.delete(user)
+    db.session.commit()
+    return success_response(user.serialize(), 201)
+
+# --------------------------------------------------------------
+# --------------------------------------------------------------
+# ----------------------- ITEM ENDPOINTS -----------------------
+# --------------------------------------------------------------
+# --------------------------------------------------------------
+
+
+
+# --------------------------------------------------------------
+# ------------------------ GET REQUESTS ------------------------
+# --------------------------------------------------------------
+
+# --------------------- ITEM INFORMATION------------------------
 @app.route("/api/items/") # TODO: Delete later, for testing
 def get_all_items():
     """
@@ -111,16 +137,85 @@ def get_all_items():
     items = [item.serialize() for item in Item.query.all()]
     return success_response({"items": items})
 
+
 @app.route("/api/items/<int:item_id>/") 
 def get_item(item_id):
     """
-    Endpoint for getting an item 
+    Endpoint for getting an item by the item's item_id
     """
     item = Item.query.filter_by(id=item_id).first()
     if item is None:
         return failure_response("item not found")
     return success_response(item.serialize())
 
+# --------------------- BORROWED ITEM INFORMATION------------------
+@app.route("/api/items/borrow")
+def get_all_borrowing_items():
+    """
+    get all the borrowing items in database
+    """
+    lst = []
+    for item in Item.query.filter_by(is_borrow_type=True).all():
+        lst.append(item.serialize())
+    return success_response(lst, 201)
+
+@app.route("/api/items/users/<int:user_id>/borrow")
+def get_user_borrowing_items(user_id):
+    """
+    get all of the user's borrowing items
+    """
+    user = User.query.filter_by(id= user_id).first()
+    if user is None:
+        return failure_response("This user was not found")
+    borrow_items = []
+    for a in user.borrow_items:
+        borrow_items.append(a.public_serialize())
+    return borrow_items
+
+# --------------------- LENT ITEM INFORMATION----------------------
+@app.route("/api/items/lend")
+def get_all_lending_items():
+    """
+    get all the lending items in database
+    """
+    lst = []
+    for item in Item.query.filter_by(is_borrow_type=False).all():
+        lst.append(item.serialize())
+    return success_response(lst, 201)
+
+
+@app.route("/api/items/users/<int:user_id>/lend")
+def get_user_lending_items(user_id):
+    """
+    get all of the user's lending items
+    """
+    user = User.query.filter_by(id= user_id).first()
+    if user is None:
+        return failure_response("This user was not found")
+    lend_items = []
+    for a in user.lend_items:
+        lend_items.append(a.public_serialize())
+        print("===============",a.public_serialize())
+    return lend_items
+
+# --------------------- SAVED ITEM INFORMATION----------------------
+
+@app.route("/api/items/users/<int:user_id>/saved")
+def get_user_saved_items(user_id):
+    """
+    get all of the user's saved items
+    """
+    user = User.query.filter_by(id= user_id).first()
+    if user is None:
+        return failure_response("This user was not found")
+    saved_items = []
+    for a in user.saved_items:
+        saved_items.append(a.public_serialize())
+    return saved_items
+
+# --------------------------------------------------------------
+# ----------------------- POST REQUESTS ------------------------
+# --------------------------------------------------------------
 
 @app.route("/api/items/<int:user_id>/", methods=["POST"])
 def create_item(user_id):
@@ -149,7 +244,7 @@ def create_item(user_id):
         is_borrow_type is None):
         return failure_response("Missing parameters!", 400)
     try:
-        due_date = datetime.strptime(due_date_str, '%m/%d/%Y %H')
+        due_date = datetime.strptime(due_date_str, '%m/%d/%y %H')
         if due_date < datetime.now():
             return failure_response("please enter a date in the future", 400)
     except:
@@ -181,65 +276,6 @@ def create_item(user_id):
     db.session.commit()
     return success_response(new_item.serialize(), 201)
 
-@app.route("/api/items/lend")
-def get_all_lending_items():
-    """
-    get all the lending items in database
-    """
-    lst = []
-    for item in Item.query.filter_by(is_borrow_type=False).all():
-        lst.append(item.serialize())
-    return success_response(lst, 201)
-
-@app.route("/api/items/borrow")
-def get_all_borrowing_items():
-    """
-    get all the borrowing items in database
-    """
-    lst = []
-    for item in Item.query.filter_by(is_borrow_type=True).all():
-        lst.append(item.serialize())
-    return success_response(lst, 201)
-
-@app.route("/api/items/users/<int:user_id>/lend")
-def get_user_lending_items(user_id):
-    """
-    get all of the user's lending items
-    """
-    user = User.query.filter_by(id= user_id).first()
-    if user is None:
-        return failure_response("This user was not found")
-    lend_items = []
-    for a in user.lend_items:
-        lend_items.append(a.public_serialize())
-        print("===============",a.public_serialize())
-    return lend_items
-
-@app.route("/api/items/users/<int:user_id>/borrow")
-def get_user_borrowing_items(user_id):
-    """
-    get all of the user's borrowing items
-    """
-    user = User.query.filter_by(id= user_id).first()
-    if user is None:
-        return failure_response("This user was not found")
-    borrow_items = []
-    for a in user.borrow_items:
-        borrow_items.append(a.public_serialize())
-    return borrow_items
-
-@app.route("/api/items/users/<int:user_id>/saved")
-def get_user_saved_items(user_id):
-    """
-    get all of the user's saved items
-    """
-    user = User.query.filter_by(id= user_id).first()
-    if user is None:
-        return failure_response("This user was not found")
-    saved_items = []
-    for a in user.saved_items:
-        saved_items.append(a.public_serialize())
-    return saved_items
 
 @app.route("/api/users/<int:user_id>/<int:item_id>", methods = ['POST'])
 def update_item(user_id, item_id):
@@ -287,6 +323,10 @@ def save_item(user_id, item_id):
     user.saved_items.append(item)
     db.session.commit()
     return success_response(user.serialize(), 201)
+
+# --------------------------------------------------------------
+# ----------------------- DELETE REQUESTS ----------------------
+# --------------------------------------------------------------
 
 @app.route("/api/users/<int:user_id>/<int:item_id>/delete/", methods = ['DELETE'])
 def delete_item(user_id, item_id):
