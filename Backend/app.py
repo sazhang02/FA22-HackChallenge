@@ -157,7 +157,7 @@ def get_all_borrowing_items():
     lst = []
     for item in Item.query.filter_by(is_borrow_type=True).all():
         lst.append(item.serialize())
-    return success_response(lst, 201)
+    return success_response({"borrow requests":lst}, 201)
 
 @app.route("/api/items/borrow/<int:user_id>/")
 def get_user_borrowing_items(user_id):
@@ -170,7 +170,7 @@ def get_user_borrowing_items(user_id):
     borrow_items = []
     for a in user.borrow_items:
         borrow_items.append(a.public_serialize())
-    return borrow_items
+    return success_response({"borrow requests":borrow_items}, 201)
 
 # --------------------- LENT ITEM INFORMATION----------------------
 @app.route("/api/items/lend/")

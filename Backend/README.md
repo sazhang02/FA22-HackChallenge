@@ -181,20 +181,26 @@ Response:
 ```
 <HTTP STATUS CODE 200>
 {
-  "items": [
-      {
-        "id": 1
-        "name": "Umbrella"
-        "due_date": "Dec-3-2022",
-        "location": "Central",
-        "borrower_id": 2,
-        "lender_id": 1,
-        "credit_value": 5,
-        "is_borrow_type": true,
-        "is_unfulfilled": true,
-        "image_url": "www.umbrella-jpg.com"
-      }, <SERIALIZED ITEMS> ...
-  ]
+    "items": [
+        {
+            "id": 1,
+            "item_name": "Umbrella",
+            "due_date": "12/01/2022 12",
+            "location": "Central Campus",
+            "poster_user": {
+                "id": 1,
+                "username": "best_app_2022",
+                "credit": 20,
+                "rating": 5,
+                "profile_image_url": null
+            },
+            "fulfiller_user": null,
+            "credit_value": 5,
+            "is_borrow_type": true,
+            "is_unfulfilled": true,
+            "image_url": "image.jpg"
+        }, <SERIALIZED ITEMS> ...
+    ]
 }
 ```
 
@@ -278,4 +284,102 @@ due_date in the past
 
 ```
 {"error": "please enter a date in the future"}
+```
+
+## Get all lending items
+
+**POST** `/api/items/lend/`
+
+Response:
+
+```
+{
+    "lending items": [
+        {
+            "id": 2,
+            "item_name": "Pot",
+            "due_date": "01/06/2023 17",
+            "location": "North Campus",
+            "poster_user": {
+                "id": 1,
+                "username": "best_app_2022",
+                "credit": 20,
+                "rating": 5,
+                "profile_image_url": null
+            },
+            "fulfiller_user": null,
+            "credit_value": 15,
+            "is_borrow_type": false,
+            "is_unfulfilled": true,
+            "image_url": "image.jpg"
+        }, <SERIALIZED ITEMS> ... 
+    ]
+}
+```
+
+## Get all lending items of a user
+
+**POST** `/api/items/lend/<int:user_id>/`
+
+Response:
+
+```
+{"lending items": [{"id": 2, "item_name": "Pot"}, <PARTIALLY SERIALIZED ITEMS> ... ]}
+```
+
+Failure Responses:<br />
+user not found
+
+```
+<HTTP STATUS CODE 404>
+{"error": "user not found"}
+```
+
+## Get all item borrowing request
+
+**POST** `/api/items/borrow/`
+
+Response:
+
+```
+{
+    "borrow requests": [
+        {
+            "id": 1,
+            "item_name": "Umbrella",
+            "due_date": "12/01/2022 12",
+            "location": "Central Campus",
+            "poster_user": {
+                "id": 1,
+                "username": "best_app_2022",
+                "credit": 20,
+                "rating": 5,
+                "profile_image_url": null
+            },
+            "fulfiller_user": null,
+            "credit_value": 5,
+            "is_borrow_type": true,
+            "is_unfulfilled": true,
+            "image_url": "image.jpg"
+        }, <SERIALIZED ITEMS> ... 
+    ]
+}
+```
+
+## Get all lending items of a user
+
+**POST** `/api/items/borrow/<int:user_id>/`
+
+Response:
+
+```
+{"borrow requests": [{"id": 1, "item_name": "Umbrella"}, <PARTIALLY SERIALIZED ITEMS> ...]}
+```
+
+Failure Responses:<br />
+user not found
+
+```
+<HTTP STATUS CODE 404>
+{"error": "user not found"}
 ```
