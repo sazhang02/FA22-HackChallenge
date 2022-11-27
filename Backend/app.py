@@ -149,7 +149,7 @@ def get_item(item_id):
     return success_response(item.serialize())
 
 # --------------------- BORROWED ITEM INFORMATION------------------
-@app.route("/api/items/borrow")
+@app.route("/api/items/borrow/")
 def get_all_borrowing_items():
     """
     get all the borrowing items in database
@@ -159,7 +159,7 @@ def get_all_borrowing_items():
         lst.append(item.serialize())
     return success_response(lst, 201)
 
-@app.route("/api/items/users/<int:user_id>/borrow")
+@app.route("/api/items/borrow/<int:user_id>/")
 def get_user_borrowing_items(user_id):
     """
     get all of the user's borrowing items
@@ -173,7 +173,7 @@ def get_user_borrowing_items(user_id):
     return borrow_items
 
 # --------------------- LENT ITEM INFORMATION----------------------
-@app.route("/api/items/lend")
+@app.route("/api/items/lend/")
 def get_all_lending_items():
     """
     get all the lending items in database
@@ -184,7 +184,7 @@ def get_all_lending_items():
     return success_response(lst, 201)
 
 
-@app.route("/api/items/users/<int:user_id>/lend")
+@app.route("/api/items/lend/<int:user_id>/")
 def get_user_lending_items(user_id):
     """
     get all of the user's lending items
@@ -200,7 +200,7 @@ def get_user_lending_items(user_id):
 
 # --------------------- SAVED ITEM INFORMATION----------------------
 
-@app.route("/api/items/users/<int:user_id>/saved")
+@app.route("/api/items/saved/<int:user_id>/")
 def get_user_saved_items(user_id):
     """
     get all of the user's saved items
@@ -263,13 +263,13 @@ def create_item(user_id):
 
     # Add item to the user's lending/borrowing list
     if is_borrow_type == True:
-        print("<><><><><><><><><>><<><<><<><><><><>><",user.borrow_items)
-        print("<><><><><><><><><>><<><<><<><><><><>><type type type type type",type(user.borrow_items))
-        # user.borrow_items.append(new_item)
-        print("<><><><><><><><><>><<><<><<><><><><>><",user.borrow_items)
+        # print("<><><><><><><><><>><<><<><<><><><><>><",user.borrow_items)
+        # print("<><><><><><><><><>><<><<><<><><><><>><type type type type type",type(user.borrow_items))
+        user.borrow_items.append(new_item)
+        # print("<><><><><><><><><>><<><<><<><><><><>><",user.borrow_items)
     else: 
-        # user.lend_items.append(new_item)
-        print("<><><><><><><><><>><<><<><<><><><><>><",user.lend_items)
+        user.lend_items.append(new_item)
+        # print("<><><><><><><><><>><<><<><<><><><><>><",user.lend_items)
 
     # Add item to Item database
     db.session.add(new_item)
@@ -277,7 +277,7 @@ def create_item(user_id):
     return success_response(new_item.serialize(), 201)
 
 
-@app.route("/api/users/<int:user_id>/<int:item_id>", methods = ['POST'])
+@app.route("/api/users/<int:user_id>/<int:item_id>/", methods = ['POST'])
 def update_item(user_id, item_id):
     """
     update an item with id item_id
@@ -289,6 +289,7 @@ def update_item(user_id, item_id):
     body = json.loads(request.data)
     if item.poster_id != user_id:
         return failure_response("user does not have permission to edit this post")
+    # TODO ADD CHECK TO MAKE SURE NOT IN PROGRESS
     iname = body.get("itemname")
     # due_date = due_date,
     location = body.get("location")
@@ -307,7 +308,7 @@ def update_item(user_id, item_id):
     db.session.commit()
     return success_response(item.serialize(), 201)
 
-@app.route("/api/users/<int:user_id>/<int:item_id>/saved", methods = ['POST'])
+@app.route("/api/users/saved/<int:user_id>/<int:item_id>/", methods = ['POST'])
 def save_item(user_id, item_id):
     """
     save an item with to user's saved_items list
@@ -328,7 +329,7 @@ def save_item(user_id, item_id):
 # ----------------------- DELETE REQUESTS ----------------------
 # --------------------------------------------------------------
 
-@app.route("/api/users/<int:user_id>/<int:item_id>/delete/", methods = ['DELETE'])
+@app.route("/api/users/<int:user_id>/<int:item_id>/", methods = ['DELETE'])
 def delete_item(user_id, item_id):
     """
     delete an item
@@ -338,9 +339,13 @@ def delete_item(user_id, item_id):
         return failure_response("item not found")
     if item.poster_id != user_id:
         return failure_response("user does not have permission to edit this post")
+    # TODO CANNOT DELETE IF IS A FULFILLER
+
     db.session.delete(item)
     db.session.commit()
     return success_response(item.serialize(), 201)
+    
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8000, debug=True)

@@ -1,7 +1,7 @@
 {
 	"info": {
-		"_postman_id": "edec7c7c-f319-4332-8c30-43d81a692c1e",
-		"name": "HackChallenge",
+		"_postman_id": "4a67a6e3-48b2-4698-ace0-eed15b9649b4",
+		"name": "HackChallenge-Postman",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "23646523"
 	},
@@ -42,13 +42,34 @@
 					"response": []
 				},
 				{
-					"name": "create a user",
+					"name": "get user by id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8000/api/users/1/",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"users",
+								"1",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "create user",
 					"request": {
 						"method": "POST",
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"username\": \"uname\",\n    \"email\": \"email.com\"\n}",
+							"raw": "{\n    \"username\" : \"Sammy\",\n    \"email\" : \"email@gmail.com\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -56,7 +77,8 @@
 							}
 						},
 						"url": {
-							"raw": "localhost:8000/api/users/",
+							"raw": "http://localhost:8000/api/users/",
+							"protocol": "http",
 							"host": [
 								"localhost"
 							],
@@ -71,10 +93,19 @@
 					"response": []
 				},
 				{
-					"name": "get a specific user by id",
+					"name": "update user by id",
 					"request": {
-						"method": "GET",
+						"method": "POST",
 						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"sazhang\",\n    \"email\": \"email_new@gmail.com\",\n    \"profile_image_url\":  \"www.image.com\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
 						"url": {
 							"raw": "localhost:8000/api/users/1/",
 							"host": [
@@ -111,36 +142,6 @@
 						}
 					},
 					"response": []
-				},
-				{
-					"name": "update user by id",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"username\": \"uname\",\n    \"email\": \"email.com\",\n    \"profile_image_url\":  \"www.image.com\"\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "localhost:8000/api/users/1/",
-							"host": [
-								"localhost"
-							],
-							"port": "8000",
-							"path": [
-								"api",
-								"users",
-								"1",
-								""
-							]
-						}
-					},
-					"response": []
 				}
 			]
 		},
@@ -153,7 +154,8 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "localhost:8000/api/items/",
+							"raw": "http://localhost:8000/api/items/",
+							"protocol": "http",
 							"host": [
 								"localhost"
 							],
@@ -168,13 +170,145 @@
 					"response": []
 				},
 				{
-					"name": "create an item by user id",
+					"name": "get item by item id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8000/api/items/2/",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"items",
+								"2",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get all borrowing requests",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8000/api/items/borrow/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"items",
+								"borrow",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get all borrowing requests by user id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8000/api/items/borrow/1/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"items",
+								"borrow",
+								"1",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get all lending requests",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8000/api/items/lend/",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"items",
+								"lend",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get all lending requests by user id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8000/api/items/lend/1/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"items",
+								"lend",
+								"1",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get all saved requests by user id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8000/api/items/saved/1/",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"items",
+								"saved",
+								"1",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "create item by user id",
 					"request": {
 						"method": "POST",
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"item_name\" : \"Umbrella\",\n    \"location\" : \"Central\",\n    \"credit_value\" : 5,\n    \"is_borrow_type\" : true,\n    \"is_unfulfilled\" : true,\n    \"image_url\" : \"www.image.com\"\n}",
+							"raw": "{\n    \"itemname\" : \"Umbrella\",\n    \"location\" : \"Central\",\n    \"credit_value\" : 5,\n    \"is_borrow_type\" : false,\n    \"image_url\" : \"www.umbrella-image.com\",\n    \"due_date\":\"12/1/22 12\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -182,7 +316,8 @@
 							}
 						},
 						"url": {
-							"raw": "localhost:8000/api/items/1/",
+							"raw": "http://localhost:8000/api/items/1/",
+							"protocol": "http",
 							"host": [
 								"localhost"
 							],
@@ -193,6 +328,59 @@
 								"1",
 								""
 							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update item",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"itemname\":\"cat\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8000/api/users/1/1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"users",
+								"1",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "save an item with item id to user with user id",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": ""
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "delete item",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": ""
 						}
 					},
 					"response": []
