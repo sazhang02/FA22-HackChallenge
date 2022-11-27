@@ -74,7 +74,7 @@ class Item(db.Model):
     """
     __tablename__ = "item"
     id = db.Column(db.Integer, primary_key=True, autoincrement = True)
-    itemname = db.Column(db.String, nullable = False)
+    item_name = db.Column(db.String, nullable = False)
     due_date = db.Column(db.DateTime(timezone=True), nullable = False)
     location = db.Column(db.String, nullable = False)
     poster_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable = False)
@@ -113,7 +113,7 @@ class Item(db.Model):
             serialized_fulfiller = None
         return {
             "id": self.id,
-            "itemname": self.itemname,
+            "item_name": self.item_name,
             "due_date": self.due_date.strftime('%m/%d/%Y %H'),
             "location": self.location,
             "poster_user": serialized_poster,
@@ -130,5 +130,5 @@ class Item(db.Model):
         """
         return {
             "id": self.id,
-            "itemname": self.itemname
+            "item_name": self.item_name
         }

@@ -308,7 +308,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"itemname\" : \"Umbrella\",\n    \"location\" : \"Central\",\n    \"credit_value\" : 5,\n    \"is_borrow_type\" : false,\n    \"image_url\" : \"www.umbrella-image.com\",\n    \"due_date\":\"12/1/22 12\"\n}",
+							"raw": "{\n    \"item_name\" : \"Umbrella\",\n    \"location\" : \"Central\",\n    \"credit_value\" : 5,\n    \"is_borrow_type\" : false,\n    \"image_url\" : \"www.umbrella-image.com\",\n    \"due_date\":\"12/1/22 12\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -339,7 +339,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"itemname\":\"cat\"\n}",
+							"raw": "{\n    \"item_name\":\"cat\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"

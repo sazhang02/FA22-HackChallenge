@@ -166,7 +166,7 @@ def get_user_borrowing_items(user_id):
     """
     user = User.query.filter_by(id= user_id).first()
     if user is None:
-        return failure_response("This user was not found")
+        return failure_response("user not found")
     borrow_items = []
     for a in user.borrow_items:
         borrow_items.append(a.public_serialize())
@@ -191,7 +191,7 @@ def get_user_lending_items(user_id):
     """
     user = User.query.filter_by(id= user_id).first()
     if user is None:
-        return failure_response("This user was not found")
+        return failure_response("user not found")
     lend_items = []
     for a in user.lend_items:
         lend_items.append(a.public_serialize())
@@ -224,11 +224,11 @@ def create_item(user_id):
     """
     user = User.query.filter_by(id= user_id).first()
     if user is None:
-        return failure_response("This user was not found")
+        return failure_response("user not found")
     body = json.loads(request.data)
 
     # Process request body if the user IS found
-    itemname = body.get("itemname")
+    item_name = body.get("item_name")
     due_date_str = body.get("due_date")
     location = body.get("location")
     credit_value = body.get("credit_value")
@@ -237,7 +237,7 @@ def create_item(user_id):
 
     # Check if request input is valid
     if (
-        itemname is None or 
+        item_name is None or 
         due_date_str is None or 
         location is None or
         credit_value is None or
@@ -251,7 +251,7 @@ def create_item(user_id):
         return failure_response("due_date not in proper format! Please enter Month/Day/Year hour[in 24 hour format]. ex '09/19/18 13'", 400)
     # Create an item
     new_item = Item(
-        itemname = itemname,
+        item_name = item_name,
         due_date = due_date,
         location = location,
         poster_id = user_id,
@@ -290,7 +290,7 @@ def update_item(user_id, item_id):
     if item.poster_id != user_id:
         return failure_response("user does not have permission to edit this post")
     # TODO ADD CHECK TO MAKE SURE NOT IN PROGRESS
-    iname = body.get("itemname")
+    iname = body.get("item_name")
     # due_date = due_date,
     location = body.get("location")
 
@@ -298,7 +298,7 @@ def update_item(user_id, item_id):
     image_url = body.get("image_url")
 
     if iname is not None:
-        item.itemname = iname
+        item.item_name = iname
     if location is not None:
         item.location =location
     if credit_value is not None:
