@@ -1,7 +1,7 @@
 {
 	"info": {
-		"_postman_id": "4a67a6e3-48b2-4698-ace0-eed15b9649b4",
-		"name": "HackChallenge-Postman",
+		"_postman_id": "43c7cfde-9d6a-425e-8a3d-9906269c8d80",
+		"name": "HackChallenge",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "23646523"
 	},
@@ -175,7 +175,8 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "localhost:8000/api/items/2/",
+							"raw": "http://localhost:8000/api/items/2/",
+							"protocol": "http",
 							"host": [
 								"localhost"
 							],
@@ -241,7 +242,8 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "localhost:8000/api/items/lend/",
+							"raw": "http://localhost:8000/api/items/lend/",
+							"protocol": "http",
 							"host": [
 								"localhost"
 							],
@@ -285,7 +287,8 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "localhost:8000/api/items/saved/1/",
+							"raw": "http://localhost:8000/api/items/saved/1/",
+							"protocol": "http",
 							"host": [
 								"localhost"
 							],
@@ -347,7 +350,7 @@
 							}
 						},
 						"url": {
-							"raw": "http://localhost:8000/api/users/1/1",
+							"raw": "http://localhost:8000/api/items/1/1/",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -355,9 +358,10 @@
 							"port": "8000",
 							"path": [
 								"api",
-								"users",
+								"items",
 								"1",
-								"1"
+								"1",
+								""
 							]
 						}
 					},
@@ -369,7 +373,20 @@
 						"method": "POST",
 						"header": [],
 						"url": {
-							"raw": ""
+							"raw": "http://localhost:8000/api/items/saved/1/1/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"items",
+								"saved",
+								"1",
+								"1",
+								""
+							]
 						}
 					},
 					"response": []
@@ -380,7 +397,19 @@
 						"method": "DELETE",
 						"header": [],
 						"url": {
-							"raw": ""
+							"raw": "http://localhost:8000/api/items/1/1/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"items",
+								"1",
+								"1",
+								""
+							]
 						}
 					},
 					"response": []

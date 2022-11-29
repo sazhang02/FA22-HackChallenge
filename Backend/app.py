@@ -210,7 +210,7 @@ def get_user_saved_items(user_id):
     saved_items = []
     for a in user.saved_items:
         saved_items.append(a.public_serialize())
-    return saved_items
+    return success_response({"saved items":saved_items}, 201)
 
 # --------------------------------------------------------------
 # ----------------------- POST REQUESTS ------------------------
@@ -309,7 +309,7 @@ def update_item(user_id, item_id):
     db.session.commit()
     return success_response(item.serialize(), 201)
 
-@app.route("/api/users/saved/<int:user_id>/<int:item_id>/", methods = ['POST'])
+@app.route("/api/items/saved/<int:user_id>/<int:item_id>/", methods = ['POST'])
 def save_item(user_id, item_id):
     """
     save an item with to user's saved_items list
@@ -332,7 +332,7 @@ def save_item(user_id, item_id):
 # ----------------------- DELETE REQUESTS ----------------------
 # --------------------------------------------------------------
 
-@app.route("/api/users/<int:user_id>/<int:item_id>/", methods = ['DELETE'])
+@app.route("/api/items/<int:user_id>/<int:item_id>/", methods = ['DELETE'])
 def delete_item(user_id, item_id):
     """
     delete an item

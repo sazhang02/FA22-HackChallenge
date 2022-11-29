@@ -502,7 +502,7 @@ The user that is trying to update this post is not the original poster
 
 ## Save a post for an item to a user bookmarks
 
-**POST** `/api/users/saved/<int:user_id>/`
+**POST** `/api/items/saved/<int:user_id>/`
 
 Request:
 
@@ -564,7 +564,7 @@ The user has already saved this item.
 
 ## Delete a post for an item a user 
 
-**DELETE** `/api/users/saved/<int:user_id>/`
+**DELETE** `/api/items/saved/<int:user_id>/`
 
 Response:
 
