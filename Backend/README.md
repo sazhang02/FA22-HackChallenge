@@ -288,7 +288,7 @@ due_date in the past
 
 ## Get all lending items
 
-**POST** `/api/items/lend/`
+**GET** `/api/items/lend/`
 
 Response:
 
@@ -319,7 +319,7 @@ Response:
 
 ## Get all lending items of a user
 
-**POST** `/api/items/lend/<int:user_id>/`
+**GET** `/api/items/lend/<int:user_id>/`
 
 Response:
 
@@ -337,7 +337,7 @@ user not found
 
 ## Get all item borrowing request
 
-**POST** `/api/items/borrow/`
+**GET** `/api/items/borrow/`
 
 Response:
 
@@ -368,7 +368,7 @@ Response:
 
 ## Get all lending items of a user
 
-**POST** `/api/items/borrow/<int:user_id>/`
+**GET** `/api/items/borrow/<int:user_id>/`
 
 Response:
 
@@ -383,3 +383,213 @@ user not found
 <HTTP STATUS CODE 404>
 {"error": "user not found"}
 ```
+
+## Get all saved items of a user
+
+**GET** `/api/items/saved/<int:user_id>/`
+
+Response:
+
+```
+{"saved items": [
+        {
+            "id": 1, 
+            "item_name": "Umbrella"
+        }, 
+        <PARTIALLY SERIALIZED ITEMS> ...
+    ]
+}
+```
+
+Failure Responses:<br />
+user not found
+
+```
+<HTTP STATUS CODE 404>
+{"error": "user not found"}
+```
+
+
+## Update a post for an item made by a user
+
+**POST** `/api/items/<int:user_id>/<int:item_id>/`
+
+Request:
+
+```
+{
+    "item_name": "Umbrella",
+    "location": "North Campus",
+    "credit_value": 10,
+    "image_url": "new_image.jpg"
+}
+```
+
+Response:
+
+```
+<HTTP STATUS CODE 201>
+{
+    "id": <ID>,
+    "item_name": "Umbrella",
+    "due_date": "12/01/2023 12",
+    "location": "North Campus",
+    "poster_user": {
+        "id": <user_id>,
+        "username": <USER NAME>,
+        "credit": <USER CREDIT>,
+        "rating": <USER RATING>,
+        "profile_image_url": <USER PROFILE IMAGE>
+    },
+    "fulfiller_user": null,
+    "credit_value": 10,
+    "is_borrow_type": true,
+    "is_unfulfilled": true,
+    "image_url": "new_image.jpg"
+}
+```
+
+Failure Responses:<br />
+<details>
+<summary>Failure Responses</summary>
+<br>
+The provided user cannot be found.
+
+```
+<HTTP STATUS CODE 404>
+{"error": "user not found"}
+```
+
+The provided item cannot be found.
+
+```
+<HTTP STATUS CODE 404>
+{"error": "item not found"}
+```
+
+The user that is trying to update this post is not the original poster
+
+```
+<HTTP STATUS CODE 404>
+{"error": "user does not have permission to edit this post"}
+```
+</details>
+
+
+
+## Save a post for an item to a user bookmarks
+
+**POST** `/api/users/saved/<int:user_id>/`
+
+Request:
+
+```
+{
+    "item_id": <ID>
+}
+```
+
+Response:
+
+```
+<HTTP STATUS CODE 201>
+{
+    "id": <ID>,
+    "item_name": "Umbrella",
+    "due_date": "12/01/2023 12",
+    "location": "North Campus",
+    "poster_user": {
+        "id": <user_id>,
+        "username": <USER NAME>,
+        "credit": <USER CREDIT>,
+        "rating": <USER RATING>,
+        "profile_image_url": <USER PROFILE IMAGE>
+    },
+    "fulfiller_user": null,
+    "credit_value": 10,
+    "is_borrow_type": true,
+    "is_unfulfilled": true,
+    "image_url": "new_image.jpg"
+}
+```
+
+Failure Responses:<br />
+<details>
+<summary>Failure Responses</summary>
+<br>
+The provided user cannot be found.
+
+```
+<HTTP STATUS CODE 404>
+{"error": "user not found"}
+```
+
+The provided item cannot be found.
+
+```
+<HTTP STATUS CODE 404>
+{"error": "item not found"}
+```
+
+The user has already saved this item.
+```
+<HTTP STATUS CODE 404>
+{"error": "item already saved"}
+```
+</details>
+
+
+
+## Delete a post for an item a user 
+
+**DELETE** `/api/users/saved/<int:user_id>/`
+
+Response:
+
+```
+<HTTP STATUS CODE 201>
+{
+    "id": <ID>,
+    "item_name": "Umbrella",
+    "due_date": "12/01/2023 12",
+    "location": "North Campus",
+    "poster_user": {
+        "id": <user_id>,
+        "username": <USER NAME>,
+        "credit": <USER CREDIT>,
+        "rating": <USER RATING>,
+        "profile_image_url": <USER PROFILE IMAGE>
+    },
+    "fulfiller_user": null,
+    "credit_value": 10,
+    "is_borrow_type": true,
+    "is_unfulfilled": true,
+    "image_url": "new_image.jpg"
+}
+```
+
+Failure Responses:<br />
+<details>
+<summary>Failure Responses</summary>
+<br>
+The provided user cannot be found.
+
+```
+<HTTP STATUS CODE 404>
+{"error": "user not found"}
+```
+
+The provided item cannot be found.
+
+```
+<HTTP STATUS CODE 404>
+{"error": "item not found"}
+```
+
+The user that wants to delete this post is not the poster.
+```
+<HTTP STATUS CODE 404>
+{"error": "user does not have permission to edit this post"}
+```
+</details>
+

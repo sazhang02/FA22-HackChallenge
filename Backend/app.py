@@ -276,7 +276,7 @@ def create_item(user_id):
     return success_response(new_item.serialize(), 201)
 
 
-@app.route("/api/users/<int:user_id>/<int:item_id>/", methods = ['POST'])
+@app.route("/api/items/<int:user_id>/<int:item_id>/", methods = ['POST'])
 def update_item(user_id, item_id):
     """
     update an item with id item_id
@@ -286,6 +286,8 @@ def update_item(user_id, item_id):
     if item is None:
         return failure_response("item not found")
     body = json.loads(request.data)
+
+    # TODO: This check should be a frontend responsbility
     if item.poster_id != user_id:
         return failure_response("user does not have permission to edit this post")
     # TODO ADD CHECK TO MAKE SURE NOT IN PROGRESS
@@ -312,6 +314,8 @@ def save_item(user_id, item_id):
     """
     save an item with to user's saved_items list
     """
+    # TODO: user may not have any posts established but want to save something
+    # just browsing -- so not in DB but should still be able to save/bookmark
     user = User.query.filter_by(id= user_id).first()
     if user is None:
         return failure_response("user not found")
