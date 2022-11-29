@@ -46,12 +46,14 @@ Response:
 }
 ```
 
-Possible Failure Response:
-
+<details>
+<summary>Failure Responses</summary>
+<br>
 ```
 <HTTP STATUS CODE 404>
 {"error": "user not found"}
 ```
+</details>
 
 ## Create a user
 
@@ -83,7 +85,9 @@ Response:
 }
 ```
 
-Failure Responses:<br />
+<details>
+<summary>Failure Responses</summary>
+<br>
 username or email field not provided
 
 ```
@@ -97,6 +101,7 @@ email not valid
 <HTTP STATUS CODE 400>
 {"error": "email not valid"}
 ```
+</details>
 
 ## Update user by id
 
@@ -132,7 +137,9 @@ Response:
 }
 ```
 
-Failure Responses:<br />
+<details>
+<summary>Failure Responses</summary>
+<br>
 user not found
 
 ```
@@ -141,6 +148,7 @@ user not found
 ```
 
 Note: There is no failure response if the email is invalid, but if the email is invalid, the email field will not be updated.
+</details>
 
 ## Delete user by id
 
@@ -162,6 +170,9 @@ Response:
 }
 ```
 
+<details>
+<summary>Failure Responses</summary>
+<br>
 Failure Responses:<br />
 user not found
 
@@ -169,6 +180,7 @@ user not found
 <HTTP STATUS CODE 404>
 {"error": "user not found"}
 ```
+</details>
 
 # ITEM ENDPOINTS
 
@@ -258,7 +270,9 @@ Response:
 }
 ```
 
-Failure Responses:<br />
+<details>
+<summary>Failure Responses</summary>
+<br>
 user not found
 
 ```
@@ -285,6 +299,7 @@ due_date in the past
 ```
 {"error": "please enter a date in the future"}
 ```
+</details>
 
 ## Get all lending items
 
@@ -327,13 +342,16 @@ Response:
 {"lending items": [{"id": 2, "item_name": "Pot"}, <PARTIALLY SERIALIZED ITEMS> ... ]}
 ```
 
-Failure Responses:<br />
+<details>
+<summary>Failure Responses</summary>
+<br>
 user not found
 
 ```
 <HTTP STATUS CODE 404>
 {"error": "user not found"}
 ```
+</details>
 
 ## Get all item borrowing request
 
@@ -376,6 +394,9 @@ Response:
 {"borrow requests": [{"id": 1, "item_name": "Umbrella"}, <PARTIALLY SERIALIZED ITEMS> ...]}
 ```
 
+<details>
+<summary>Failure Responses</summary>
+<br>
 Failure Responses:<br />
 user not found
 
@@ -383,6 +404,7 @@ user not found
 <HTTP STATUS CODE 404>
 {"error": "user not found"}
 ```
+</details>
 
 ## Get all saved items of a user
 
@@ -401,14 +423,16 @@ Response:
 }
 ```
 
-Failure Responses:<br />
+<details>
+<summary>Failure Responses</summary>
+<br>
 user not found
 
 ```
 <HTTP STATUS CODE 404>
 {"error": "user not found"}
 ```
-
+</details>
 
 ## Update a post for an item made by a user
 
@@ -449,7 +473,6 @@ Response:
 }
 ```
 
-Failure Responses:<br />
 <details>
 <summary>Failure Responses</summary>
 <br>
@@ -513,7 +536,6 @@ Response:
 }
 ```
 
-Failure Responses:<br />
 <details>
 <summary>Failure Responses</summary>
 <br>
@@ -568,7 +590,6 @@ Response:
 }
 ```
 
-Failure Responses:<br />
 <details>
 <summary>Failure Responses</summary>
 <br>
