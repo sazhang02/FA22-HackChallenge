@@ -31,6 +31,13 @@ with app.app_context():
 # --------------------------------------------------------------
 # ------------------------- GET REQUESTS -----------------------
 # --------------------------------------------------------------
+@app.route("/")
+def greet_user():
+    """
+    Endpoint to greet users
+    """
+    return "Welcome to ShareVerse!"
+
 @app.route("/api/users/")
 def get_all_users():
     """
