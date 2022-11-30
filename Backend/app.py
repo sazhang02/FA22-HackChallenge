@@ -287,10 +287,15 @@ def update_item(user_id, item_id):
         return failure_response("item not found")
     body = json.loads(request.data)
 
-    # TODO: This check should be a frontend responsbility
+    # TODO: Should this check should be a frontend responsbility??
     if item.poster_id != user_id:
         return failure_response("user does not have permission to edit this post")
-    # TODO ADD CHECK TO MAKE SURE NOT IN PROGRESS
+
+    if not item.is_unfulfilled:
+        # This post has been accepted between two users, so we should not allow 
+        # any edits to the post after this point
+        return failure_response("The details of this post cannot be edited when it is being processed.")
+
     iname = body.get("item_name")
     # due_date = due_date,
     location = body.get("location")
@@ -306,6 +311,10 @@ def update_item(user_id, item_id):
         item.credit_value = credit_value
     if image_url is not None:
         item.image_url = image_url
+
+ 
+
+
     db.session.commit()
     return success_response(item.serialize(), 201)
 
@@ -314,8 +323,6 @@ def save_item(user_id, item_id):
     """
     save an item with to user's saved_items list
     """
-    # TODO: user may not have any posts established but want to save something
-    # just browsing -- so not in DB but should still be able to save/bookmark
     user = User.query.filter_by(id= user_id).first()
     if user is None:
         return failure_response("user not found")

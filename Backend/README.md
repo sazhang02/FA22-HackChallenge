@@ -496,6 +496,15 @@ The user that is trying to update this post is not the original poster
 <HTTP STATUS CODE 404>
 {"error": "user does not have permission to edit this post"}
 ```
+
+
+This post has been accepted between two users, so we should not allow any edits to the post after this point.
+
+```
+<HTTP STATUS CODE 404>
+{"error": "The details of this post cannot be edited when it is being processed."}
+```
+
 </details>
 
 
