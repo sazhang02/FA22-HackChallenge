@@ -1,0 +1,5 @@
+venv
+__pycache__
+*.db
+*.postman_collection.json
+.env
