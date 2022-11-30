@@ -1,5 +1,5 @@
 from re import T, fullmatch
-from db import Item, User, db
+from db import Item, User,Image, db
 from flask import Flask, request
 import json 
 from datetime import datetime
@@ -355,7 +355,23 @@ def delete_item(user_id, item_id):
     db.session.commit()
     return success_response(item.serialize(), 201)
     
-
+# --------------------------------------------------------------
+# ----------------------- IMAGE REQUESTS ----------------------
+# --------------------------------------------------------------
+@app.route("/upload/", methods=["POST"])
+def upload():
+    """
+    Endpoint for uploading an image to AWS given its base64 form,
+    then storing/returning the URL of that image
+    """
+    body = json.loads(request.data)
+    image_data = body.get("image_data")
+    if image_data is None:
+        return failure_response("No base64 image found")
+    asset = Image(image_data = image_data)
+    db.session.add(asset)
+    db.session.commit()
+    return success_response(asset.serialize(),201)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8000, debug=True)
