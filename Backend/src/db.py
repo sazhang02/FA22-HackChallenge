@@ -11,6 +11,8 @@ from PIL import Image
 import random
 import re
 import string
+import bcrypt
+import hashlib
 
 db = SQLAlchemy()
 EXTENSIONS = ["png","gif","jpg","jpeg"]
@@ -26,7 +28,10 @@ class User(db.Model):
     __tablename__ = "user"
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String, nullable = False)
-    email = db.Column(db.String, nullable = False)
+    # User information
+    email = db.Column(db.String, nullable=False, unique=True)
+    password_digest = db.Column(db.String, nullable=False) # encrypted password for authentification
+
     credit = db.Column(db.Integer, nullable = False)
     rating = db.Column(db.Integer, nullable = False)
     profile_image_url= db.Column(db.String)
@@ -38,6 +43,24 @@ class User(db.Model):
     lend_items = db.relationship("Item", cascade="delete", foreign_keys=[lend_items_id], uselist=True)
     borrow_items = db.relationship("Item", cascade="delete", foreign_keys=[borrow_items_id], uselist=True)
     saved_items = db.relationship("Item", cascade="delete", foreign_keys=[saved_items_id], uselist=True)
+
+    # Session information for authentification
+    session_token = db.Column(db.String, nullable=False, unique=True)
+    session_expiration = db.Column(db.DateTime, nullable=False)
+    update_token = db.Column(db.String, nullable=False, unique=True)
+
+    def __init__(self, **kwargs):
+        """
+        Initializes a User object
+        """
+        self.username = kwargs.get("username")
+        self.email = kwargs.get("email")
+        self.password_digest = bcrypt.hashpw(kwargs.get("password").encode("utf8"), bcrypt.gensalt(rounds=13))
+        self.renew_session()
+
+        self.credit = kwargs.get("credit", 20)
+        self.rating = kwargs.get("rating", 5)
+        self.profile_image_url = kwargs.get("profile_image_url")
 
     def public_serialize(self):
         """
@@ -81,6 +104,42 @@ class User(db.Model):
             "saved_items":saved_items
         }
 
+    # ---- Authentification functions -----
+    def _urlsafe_base_64(self):
+        """
+        Randomly generates hashed tokens (used for session/update tokens)
+        """
+        return hashlib.sha1(os.urandom(64)).hexdigest()
+
+    def renew_session(self):
+        """
+        Renews the sessions, i.e.
+        1. Creates a new session token
+        2. Sets the expiration time of the session to be a day from now
+        3. Creates a new update token
+        """
+        self.session_token = self._urlsafe_base_64()
+        self.session_expiration = datetime.datetime.now() + datetime.timedelta(days=1)
+        self.update_token = self._urlsafe_base_64()
+
+    def verify_password(self, password):
+        """
+        Verifies the password of a user
+        """
+        return bcrypt.checkpw(password.encode("utf8"), self.password_digest)
+
+    def verify_session_token(self, session_token):
+        """
+        Verifies the session token of a user
+        """
+        return session_token == self.session_token and datetime.datetime.now() < self.session_expiration
+
+    def verify_update_token(self, update_token):
+        """
+        Verifies the update token of a user
+        """
+        return update_token == self.update_token
+
 
 class Item(db.Model):
     """
@@ -100,20 +159,18 @@ class Item(db.Model):
     is_unfulfilled = db.Column(db.Boolean, nullable = False)
     image_url = db.Column(db.String, nullable = True)
 
-    # def __init__(self, **kwargs):
-    #     """
-    #     Initializes a Item object
-    #     """
-    #     # self.item_name = kwargs.get("item_name")
-    #     # TODO: imlement datetime functionality
-    #     # self.due_date = kwargs.get("due_date")
-    #     self.location = kwargs.get("location")
-    #     self.poster_id = kwargs.get("poster_id")
-    #     self.fulfiller_id = None
-    #     self.credit_value = kwargs.get("credit_value")
-    #     self.is_borrow_type = kwargs.get("is_borrow_type")
-    #     self.is_unfulfilled = True
-    #     self.image_url = kwargs.get("image_url")
+    def __init__(self, **kwargs):
+        """
+        Initializes a Item object
+        """
+        self.item_name = kwargs.get("item_name")
+        self.due_date = kwargs.get("due_date")
+        self.location = kwargs.get("location")
+
+        self.credit_value = kwargs.get("credit_value")
+        self.is_borrow_type = kwargs.get("is_borrow_type")
+        self.is_unfulfilled = kwargs.get("is_unfulfilled", True)
+        self.image_url = kwargs.get("image_url")
 
     def serialize(self):    
         """

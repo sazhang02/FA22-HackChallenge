@@ -2,7 +2,8 @@ from re import T, fullmatch
 from db import Item, User,Image, db
 from flask import Flask, request
 import json 
-from datetime import datetime
+import datetime
+import users_dao
 
 
 app = Flask(__name__)
@@ -66,24 +67,48 @@ def create_user():
     """
     create a user
     """
-    body = json.loads(request.data)
-    uname=body.get('username')
-    e=body.get('email')
-    if uname is None or e is None:
-        return failure_response("please provide a username and email",400)
-    if not fullmatch(email_regex, e):
-        return failure_response("email not valid", 400)
-    new_user = User(
-        username= uname,
-        email=e,
-        credit=20,
-        rating=5,
-        profile_image_url=None,
-        )
 
-    db.session.add(new_user)
-    db.session.commit()
-    return success_response(new_user.serialize(), 201)
+    body = json.loads(request.data)
+    email = body.get("email")
+    username=body.get('username')
+    password = body.get("password")
+
+    if email is None or password is None or username is None:
+        return failure_response("Missing email, password, or username", 400)
+
+    success, user = users_dao.create_user(username, email, password)
+
+    if not success:
+        return failure_response("User already exists", 400)
+
+    return success_response(
+        {
+            "session_token": user.session_token,
+            "session_expiration": str(user.session_expiration),
+            "update_token": user.update_token
+        }
+    )
+
+    # body = json.loads(request.data)
+    # uname=body.get('username')
+    # e=body.get('email')
+    # password = body.get("password")
+    # if uname is None or e is None or password is None:
+    #     return failure_response("Please provide a username, email, and password",400)
+    # if not fullmatch(email_regex, e):
+    #     return failure_response("email not valid", 400)
+    # new_user = User(
+    #     username= uname,
+    #     email=e,
+    #     password = password,
+    #     credit=20,
+    #     rating=5,
+    #     profile_image_url=None,
+    #     )
+
+    # db.session.add(new_user)
+    # db.session.commit()
+    # return success_response(new_user.serialize(), 201)
 
 
 @app.route("/api/users/<int:user_id>/", methods = ['POST'])
@@ -286,9 +311,20 @@ def create_item(user_id):
 @app.route("/api/items/<int:user_id>/<int:item_id>/", methods = ['POST'])
 def update_item(user_id, item_id):
     """
-    update an item with id item_id
+    Endpoint to update an item with id item_id.
+
+    Protected with authentification
     """
-   
+    success, session_token = extract_token(request)
+    if not success:
+        return failure_response("Could not extract session token", 400)
+
+    user = users_dao.get_user_by_session_token(session_token)
+
+    # Confirm user exists and session token isn't expired
+    if user is None or not user.verify_session_token(session_token):
+        return failure_response("Invalid session token")
+
     item = Item.query.filter_by(id= item_id).first()
     if item is None:
         return failure_response("item not found")
@@ -304,6 +340,7 @@ def update_item(user_id, item_id):
         return failure_response("The details of this post cannot be edited when it is being processed.")
 
     iname = body.get("item_name")
+    # TODO: add due date
     # due_date = due_date,
     location = body.get("location")
 
@@ -383,3 +420,154 @@ def upload():
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8000, debug=True)
 
+
+
+# --------------------------------------------------------------
+# --------------------------------------------------------------
+# ----------------------- AUTHENTICATION -----------------------
+# --------------------------------------------------------------
+# --------------------------------------------------------------
+
+def extract_token(request):
+    """
+    Helper function that extracts the token from the header of a request
+    """
+    auth_header = request.headers.get("Authorization")
+    if auth_header is None:
+        return False, failure_response("Missing authorization header", 400)
+
+    #Header looks like "Authorization Bearer <token>"
+    bearer_token = auth_header.replace("Bearer ","").strip()
+    if bearer_token is None or not bearer_token:
+        return False, failure_response("Invalid authorization header", 400)
+
+    return True, bearer_token
+
+
+@app.route("/register/", methods=["POST"])
+def register_account():
+    """
+    Endpoint for registering a new user
+    """
+    body = json.loads(request.data)
+    email = body.get("email")
+    password = body.get("password")
+
+    if email is None or password is None:
+        return failure_response("Missing email or password", 400)
+
+    success, user = users_dao.create_user(email, password)
+
+    if not success:
+        return failure_response("User already exists", 400)
+
+    return success_response(
+        {
+            "session_token": user.session_token,
+            "session_expiration": str(user.session_expiration),
+            "update_token": user.update_token
+        }
+    )
+
+
+@app.route("/login/", methods=["POST"])
+def login():
+    """
+    Endpoint for logging in a user
+    """
+    body = json.loads(request.data)
+    email = body.get("email")
+    password = body.get("password")
+
+    if email is None or password is None:
+        return failure_response("Missing email or password!", 400)
+
+    # Check if email and password credentials exist in the db
+    success, user = users_dao.verify_credentials(email, password)
+
+    if not success:
+        return failure_response("Incorrect email or password", 401)
+
+    if user.session_token == "":
+        # We have previously logged out, so create a new session token to log in
+        user.renew_session()
+        db.session.commit()
+        
+    return success_response(
+        {
+            "session_token": user.session_token,
+            "session_expiration": str(user.session_expiration),
+            "update_token": user.update_token
+        }
+    )
+
+
+@app.route("/session/", methods=["POST"])
+def update_session():
+    """
+    Endpoint for updating a user's session
+    """
+    success, update_token = extract_token(request)
+
+    if not success:
+        return failure_response("Could not extract session token", 400)
+
+    success_user, user = users_dao.renew_session(update_token)
+
+    if not success_user:
+        return failure_response("Invalid update token", 400)
+
+    return success_response(
+        {
+             "session_token": user.session_token,
+            "session_expiration": str(user.session_expiration),
+            "update_token": user.update_token
+        }
+    )
+
+
+@app.route("/secret/", methods=["GET"])
+def secret_message():
+    """
+    Endpoint for verifying a session token and returning a secret message
+
+    In your project, you will use the same logic for any endpoint that needs 
+    authentication
+    """
+    success, session_token = extract_token(request)
+
+    if not success:
+        return failure_response("Could not extract session token", 400)
+
+    user = users_dao.get_user_by_session_token(session_token)
+
+    # Confirm user exists and session token isn't expired
+    if user is None or not user.verify_session_token(session_token):
+        return failure_response("Invalid session token")
+
+    # Handle logic of the endpoint
+    # e.g. editing their profile
+    return success_response({"message": "You have successfully implemented sessions!"})
+    
+
+@app.route("/logout/", methods=["POST"])
+def logout():
+    """
+    Endpoint for logging out a user
+    """
+    success, session_token = extract_token(request)
+
+    if not success:
+        return failure_response("Could not extract session token", 400)
+
+    user = users_dao.get_user_by_session_token(session_token)
+    
+    if user is None or not user.verify_session_token(session_token):
+        return failure_response("Invalid session token", 400)
+
+    user.session_token = ""
+    user.session_expiration = datetime.datetime.now()
+    user.update_token = ""
+
+    db.session.commit()
+    return success_response({"message": "You have successfully logged out!"})
