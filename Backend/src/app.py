@@ -76,21 +76,49 @@ def get_user(user_id):
 # ------------------------ POST REQUESTS -----------------------
 # --------------------------------------------------------------
 
+def validate_email(email):
+    """
+    Returns True if the email is valid and False otherwise. An email is valid
+    if it follows an email format (e.g. email_name@domain) and the domain is @cornell.edu.
+
+    Also, returns a failure response respectively.
+    """
+    if not fullmatch(email_regex, email):
+        return False, failure_response("This is not a valid email address.", 400)
+
+    if email[email.rindex('@'):] != "@cornell.edu":
+        return False, failure_response("Please use a Cornell email address", 403)
+
+    if (User.query.filter_by(email= email).first() != None):
+        return False, failure_response("A user with this email already exists. Please use a new email address.", 403)
+    
+    return True, None
 @app.route("/api/users/", methods=["POST"])
 def create_user():
     """
     create a user
     """
     body = json.loads(request.data)
-    uname=body.get('username')
-    e=body.get('email')
-    if uname is None or e is None:
+    username=body.get('username')
+    email=body.get('email')
+    if username is None or email is None:
         return failure_response("please provide a username and email",400)
-    if not fullmatch(email_regex, e):
-        return failure_response("email not valid", 400)
+
+    # if not fullmatch(email_regex, email):
+    #     return failure_response("This is not a valid email address.", 400)
+
+    # if email[email.rindex('@'):] != "@cornell.edu":
+    #     return failure_response("Please use a Cornell email address", 403)
+
+    # if (User.query.filter_by(email= email).first() != None):
+    #     return failure_response("A user with this email already exists. Please use a new email address.", 403)
+    valid_email, failure_response = validate_email(email)
+    if not valid_email:
+        return failure_response
+
     new_user = User(
-        username= uname,
-        email=e,
+        username= username,
+        email=email,
         credit=20,
         rating=5,
         profile_image_url=None,
@@ -110,18 +138,22 @@ def update_user(user_id):
     """
     user = User.query.filter_by(id= user_id).first()
     if user is None:
-        return failure_response("user not found",404)
+        return failure_response("This user was not found",404)
     body = json.loads(request.data)
-    uname = body.get("username")
-    e = body.get("email")
+
+    username = body.get("username")
+    email = body.get("email")
     image=body.get("profile_image_url")
-    # TODO: Check for cornell id
-    # if email[email.rindex['@']]:
-    #     return failure_response("Please input a @cornell.edu email",403)
-    if uname is not None:
-        user.username = uname
-    if e is not None and fullmatch(email_regex, e):
-        user.email =e
+
+    if email is not None:
+        valid_email, failure_response = validate_email(email)
+        if not valid_email:
+            return failure_response
+        user.email = email
+    
+    if username is not None:
+        user.username = username
+        
     if image is not None:
         user.profile_image_url = image
     db.session.commit()
