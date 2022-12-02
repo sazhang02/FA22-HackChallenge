@@ -1,5 +1,5 @@
 from re import T, fullmatch
-from db import Item, User,Image, db
+from db import Item, User, Asset, db
 from flask import Flask, request
 import json 
 from datetime import datetime
@@ -141,7 +141,7 @@ def get_all_items():
     """
     Endpoint for getting all items
     """
-    items = [item.serialize() for item in Item.query.all()]
+    items = [item.serialize() for item in Item.query.all()] + [item.serialize() for item in Item.query.all()]
     return success_response({"items": items})
 
 
@@ -150,7 +150,13 @@ def get_item(item_id):
     """
     Endpoint for getting an item by the item's item_id
     """
-    item = Item.query.filter_by(id=item_id).first()
+    body = json.loads(request.data)
+    is_borrow_type = body.get("is_borrow_type")
+    item = None
+    if is_borrow_type:
+        item = Item.query.filter_by(id=item_id).first()
+    else:
+        item = Item.query.filter_by(id=item_id).first()
     if item is None:
         return failure_response("item not found")
     return success_response(item.serialize())
@@ -161,9 +167,7 @@ def get_all_borrowing_items():
     """
     get all the borrowing items in database
     """
-    lst = []
-    for item in Item.query.filter_by(is_borrow_type=True).all():
-        lst.append(item.serialize())
+    lst = [item.serialize() for item in Item.query.all()]
     return success_response({"borrow requests":lst}, 201)
 
 @app.route("/api/items/borrow/<int:user_id>/")
@@ -174,10 +178,10 @@ def get_user_borrowing_items(user_id):
     user = User.query.filter_by(id= user_id).first()
     if user is None:
         return failure_response("user not found")
-    borrow_items = []
-    for a in user.borrow_items:
-        borrow_items.append(a.public_serialize())
-    return success_response({"borrow requests":borrow_items}, 201)
+    items = []
+    for a in user.items:
+        items.append(a.public_serialize())
+    return success_response({"borrow requests":items}, 201)
 
 # --------------------- LENT ITEM INFORMATION----------------------
 @app.route("/api/items/lend/")
@@ -185,9 +189,7 @@ def get_all_lending_items():
     """
     get all the lending items in database
     """
-    lst = []
-    for item in Item.query.filter_by(is_borrow_type=False).all():
-        lst.append(item.serialize())
+    lst = [item.serialize() for item in Item.query.all()]
     return success_response({"lending items":lst}, 201)
 
 
@@ -199,10 +201,10 @@ def get_user_lending_items(user_id):
     user = User.query.filter_by(id= user_id).first()
     if user is None:
         return failure_response("user not found")
-    lend_items = []
-    for a in user.lend_items:
-        lend_items.append(a.public_serialize())
-    return success_response({"lending items":lend_items}, 201)
+    items = []
+    for a in user.items:
+        items.append(a.public_serialize())
+    return success_response({"lending items":items}, 201)
 
 # --------------------- SAVED ITEM INFORMATION----------------------
 
@@ -214,9 +216,7 @@ def get_user_saved_items(user_id):
     user = User.query.filter_by(id= user_id).first()
     if user is None:
         return failure_response("This user was not found")
-    saved_items = []
-    for a in user.saved_items:
-        saved_items.append(a.public_serialize())
+    saved_items = [s.serialize for s in user.saved_items + user.saved_items]
     return success_response({"saved items":saved_items}, 201)
 
 # --------------------------------------------------------------
@@ -256,30 +256,44 @@ def create_item(user_id):
     except:
         return failure_response("due_date not in proper format! Please enter Month/Day/Year hour[in 24 hour format]. ex '09/19/18 13'", 400)
     # Create an item
-    new_item = Item(
-        item_name = item_name,
-        due_date = due_date,
-        location = location,
-        poster_id = user_id,
-        credit_value = credit_value,
-        is_borrow_type = is_borrow_type,
-        image_url = image_url,
-        is_unfulfilled = True
-    )
+    new_item = None
+    if is_borrow_type:
+        new_item = Item(
+            item_name = item_name,
+            due_date = due_date,
+            location = location,
+            poster_id = user_id,
+            credit_value = credit_value,
+            is_borrow_type = is_borrow_type,
+            image_url = image_url,
+            is_unfulfilled = True
+        )
+    else: 
+        new_item = Item(
+            item_name = item_name,
+            due_date = due_date,
+            location = location,
+            poster_id = user_id,
+            credit_value = credit_value,
+            # is_borrow_type = is_borrow_type,
+            image_url = image_url,
+            is_unfulfilled = True
+        )
 
     # Add item to the user's lending/borrowing list
     if is_borrow_type == True:
-        # print("<><><><><><><><><>><<><<><<><><><><>><",user.borrow_items)
-        # print("<><><><><><><><><>><<><<><<><><><><>><type type type type type",type(user.borrow_items))
+        # print("<><><><><><><><><>><<><<><<><><><><>><",user.items)
+        # print("<><><><><><><><><>><<><<><<><><><><>><type type type type type",type(user.items))
         user.borrow_items.append(new_item)
-        # print("<><><><><><><><><>><<><<><<><><><><>><",user.borrow_items)
+        print("<><><><><><><><><>><<><<><<><><><><>><",user.borrow_items)
     else: 
         user.lend_items.append(new_item)
-        # print("<><><><><><><><><>><<><<><<><><><><>><",user.lend_items)
+        print("asdasd<><><><><><><><><>><<><<><<><><><><>><",user.lend_items)
 
     # Add item to Item database
     db.session.add(new_item)
     db.session.commit()
+    # print(User.query.filter_by(id= user_id).first().items)
     return success_response(new_item.serialize(), 201)
 
 
@@ -289,7 +303,13 @@ def update_item(user_id, item_id):
     update an item with id item_id
     """
    
-    item = Item.query.filter_by(id= item_id).first()
+    body = json.loads(request.data)
+    is_borrow_type = body.get("is_borrow_type")
+    item = None
+    if is_borrow_type:
+        item = Item.query.filter_by(id=item_id).first()
+    else:
+        item = Item.query.filter_by(id=item_id).first()
     if item is None:
         return failure_response("item not found")
     body = json.loads(request.data)
@@ -333,11 +353,14 @@ def save_item(user_id, item_id):
     user = User.query.filter_by(id= user_id).first()
     if user is None:
         return failure_response("user not found")
-    item = Item.query.filter_by(id= item_id).first()
+
+    item = Item.query.filter_by(id=item_id).first()
+
     if item is None:
         return failure_response("item not found")
-    if item in user.saved_items:
+    if item in user.saved_items :
         return failure_response("item already saved")
+   
     user.saved_items.append(item)
     db.session.commit()
     return success_response(user.serialize(), 201)
@@ -351,7 +374,13 @@ def delete_item(user_id, item_id):
     """
     delete an item
     """
-    item = Item.query.filter_by(id= item_id).first()
+    body = json.loads(request.data)
+    is_borrow_type = body.get("is_borrow_type")
+    item = None
+    if is_borrow_type:
+        item = Item.query.filter_by(id=item_id).first()
+    else:
+        item = Item.query.filter_by(id=item_id).first()
     if item is None:
         return failure_response("item not found")
     if item.poster_id != user_id:
@@ -365,7 +394,7 @@ def delete_item(user_id, item_id):
 # --------------------------------------------------------------
 # ----------------------- IMAGE REQUESTS ----------------------
 # --------------------------------------------------------------
-@app.route("/upload/", methods=["POST"])
+@app.route("/api/upload/", methods=["POST"])
 def upload():
     """
     Endpoint for uploading an image to AWS given its base64 form,
@@ -375,7 +404,7 @@ def upload():
     image_data = body.get("image_data")
     if image_data is None:
         return failure_response("No base64 image found")
-    asset = Image(image_data = image_data)
+    asset = Asset(image_data = image_data)
     db.session.add(asset)
     db.session.commit()
     return success_response(asset.serialize(),201)

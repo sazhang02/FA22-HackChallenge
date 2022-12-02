@@ -18,6 +18,21 @@ BASE_DIR = os.getcwd()
 S3_BUCKET_NAME = os.environ.get("S3_BUCKET_NAME")
 S3_BASE_URL = f"https://{S3_BUCKET_NAME}.s3.us-east-1.amazonaws.com"
 
+lend_assoc = db.Table("lend_association", db.Model.metadata,
+    db.Column("item_id", db.Integer, db.ForeignKey("item.id")),
+    db.Column("user_id", db.Integer, db.ForeignKey("user.id"))
+)
+
+borrow_assoc = db.Table("borrow_association", db.Model.metadata,
+    db.Column("item_id", db.Integer, db.ForeignKey("item.id")),
+    db.Column("user_id", db.Integer, db.ForeignKey("user.id"))
+)
+
+saved_assoc = db.Table("saved_association", db.Model.metadata,
+    db.Column("item_id", db.Integer, db.ForeignKey("item.id")),
+    db.Column("user_id", db.Integer, db.ForeignKey("user.id"))
+)
+
 class User(db.Model):
     """
     User Model
@@ -31,13 +46,9 @@ class User(db.Model):
     rating = db.Column(db.Integer, nullable = False)
     profile_image_url= db.Column(db.String)
 
-    lend_items_id = db.Column(db.Integer, db.ForeignKey("item.id"))
-    borrow_items_id = db.Column(db.Integer, db.ForeignKey("item.id"))
-    saved_items_id = db.Column(db.Integer, db.ForeignKey("item.id"))
-
-    lend_items = db.relationship("Item", cascade="delete", foreign_keys=[lend_items_id], uselist=True)
-    borrow_items = db.relationship("Item", cascade="delete", foreign_keys=[borrow_items_id], uselist=True)
-    saved_items = db.relationship("Item", cascade="delete", foreign_keys=[saved_items_id], uselist=True)
+    saved_items = db.relationship("Item", secondary=saved_assoc, back_populates='saved_users')
+    borrow_items = db.relationship("Item", secondary=borrow_assoc, back_populates='borrow_users')
+    lend_items = db.relationship("Item", secondary=lend_assoc, back_populates='lend_users')
 
     def public_serialize(self):
         """
@@ -56,19 +67,6 @@ class User(db.Model):
         """
         constructs users with all fields as a python dictionary
         """
-        print(type(self.lend_items))
-
-        lend_items = []
-        for a in self.lend_items:
-            lend_items.append(a.public_serialize())
-
-        borrow_items = []
-        for a in self.borrow_items:
-            borrow_items.append(a.public_serialize())
-
-        saved_items = []
-        for a in self.saved_items:
-            saved_items.append(a.public_serialize())
         return {
             "id": self.id,
             "username": self.username,
@@ -76,15 +74,15 @@ class User(db.Model):
             "credit": self.credit,
             "rating": self.rating,
             "profile_image_url": self.profile_image_url,
-            "lend_items": lend_items,
-            "borrow_items":borrow_items,
-            "saved_items":saved_items
+            "lend_items": [l.public_serialize() for l in self.lend_items],
+            "borrow_items": [b.public_serialize() for b in self.borrow_items],
+            "saved_items": [s.public_serialize() for s in self.saved_items]
         }
 
 
 class Item(db.Model):
     """
-    Item Model
+   Item Model
     Has a many-to-many relationship with User model
     """
     __tablename__ = "item"
@@ -95,8 +93,11 @@ class Item(db.Model):
     poster_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable = False)
     fulfiller_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable = True)
 
-    credit_value = db.Column(db.Integer, nullable = False)
+    saved_users = db.relationship("User", secondary=saved_assoc, back_populates='saved_items')
+    borrow_users = db.relationship("User", secondary=borrow_assoc, back_populates='borrow_items')
+    lend_users = db.relationship("User", secondary=lend_assoc, back_populates='lend_items')
     is_borrow_type = db.Column(db.Boolean, nullable = False)
+    credit_value = db.Column(db.Integer, nullable = False)
     is_unfulfilled = db.Column(db.Boolean, nullable = False)
     image_url = db.Column(db.String, nullable = True)
 
@@ -149,7 +150,8 @@ class Item(db.Model):
         }
 
 
-class Image(db.Model):
+
+class Asset(db.Model):
     """
     Image Model
     """
@@ -192,6 +194,7 @@ class Image(db.Model):
                 )
                 for _ in range (16)
             )
+            print("<><<><><><<<<><<><><><>><<><><><><><><><> create function")
             img_str=re.sub("^data:image/.+;base64,","",image_data)
             img_data=base64.b64decode(img_str)
             img = Image.open(BytesIO(img_data))
