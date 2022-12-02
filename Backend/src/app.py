@@ -251,10 +251,6 @@ def create_item(user_id):
     except:
         return failure_response("due_date not in proper format! Please enter Month/Day/Year hour[in 24 hour format]. ex '09/19/18 13'", 400)
     # Create an item
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
     new_item = Item(
         item_name = item_name,
         due_date = due_date,
@@ -262,14 +258,9 @@ def create_item(user_id):
         poster_id = user_id,
         credit_value = credit_value,
         is_borrow_type = is_borrow_type,
-<<<<<<< Updated upstream
         image_url = upload(image_data),
-=======
-        image_url = image_url,
->>>>>>> Stashed changes
         is_unfulfilled = True
     )
-
 
     # Add item to the user's lending/borrowing list
     if is_borrow_type == True:
