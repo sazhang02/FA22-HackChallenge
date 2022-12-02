@@ -99,7 +99,7 @@ def update_user(user_id):
     e = body.get("email")
     image=body.get("profile_image_url")
     # TODO: Check for cornell id
-    # if email:
+    # if email[email.rindex['@']]:
     #     return failure_response("Please input a @cornell.edu email",403)
     if uname is not None:
         user.username = uname
@@ -296,7 +296,6 @@ def update_item(user_id, item_id):
         return failure_response("item not found")
     body = json.loads(request.data)
 
-    # TODO: Should this check should be a frontend responsbility??
     if item.poster_id != user_id:
         return failure_response("user does not have permission to edit this post")
 
@@ -350,6 +349,7 @@ def fulfill_item(user_id, item_id):
     """
     Endpoint to add the user of user_id as a fulfiller for item of item_id.   
     """
+    # TODO: set transaction for date finished?
     pass
 
 # --------------------------------------------------------------
@@ -361,14 +361,17 @@ def delete_item(user_id, item_id):
     """
     delete an item
     """
-    body = json.loads(request.data)
     item = Item.query.filter_by(id= item_id).first()
 
     if item is None:
         return failure_response("item not found")
     if item.poster_id != user_id:
         return failure_response("user does not have permission to edit this post")
-    # TODO CANNOT DELETE IF IS A FULFILLER
+    
+    if not item.is_unfulfilled:
+        # We make it so you can't delete an item that is being fulfilled so
+        # users can't cut the transaction short.
+        return failure_response("Can't delete an item that is in the process of being fulfilled")
 
     db.session.delete(item)
     db.session.commit()
