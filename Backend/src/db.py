@@ -174,9 +174,7 @@ class Asset(db.Model):
         """
         Serializes an Image Object
         """
-        return {
-            "url":f"{self.base_url}/{self.salt}.{self.extension}",
-            "created_at": str(self.created_at)}
+        return f"{self.base_url}/{self.salt}.{self.extension}"
     def create(self, image_data):
         """
         Given an image in base64 encoding, does the following:

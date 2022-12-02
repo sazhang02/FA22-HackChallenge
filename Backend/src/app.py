@@ -239,7 +239,7 @@ def create_item(user_id):
     location = body.get("location")
     credit_value = body.get("credit_value")
     is_borrow_type = body.get("is_borrow_type")
-    image_url = body.get("image_url")
+    image_data = body.get("image_data")
 
     # Check if request input is valid
     if (
@@ -256,29 +256,18 @@ def create_item(user_id):
     except:
         return failure_response("due_date not in proper format! Please enter Month/Day/Year hour[in 24 hour format]. ex '09/19/18 13'", 400)
     # Create an item
-    new_item = None
-    if is_borrow_type:
-        new_item = Item(
-            item_name = item_name,
-            due_date = due_date,
-            location = location,
-            poster_id = user_id,
-            credit_value = credit_value,
-            is_borrow_type = is_borrow_type,
-            image_url = image_url,
-            is_unfulfilled = True
-        )
-    else: 
-        new_item = Item(
-            item_name = item_name,
-            due_date = due_date,
-            location = location,
-            poster_id = user_id,
-            credit_value = credit_value,
-            # is_borrow_type = is_borrow_type,
-            image_url = image_url,
-            is_unfulfilled = True
-        )
+
+    new_item = Item(
+        item_name = item_name,
+        due_date = due_date,
+        location = location,
+        poster_id = user_id,
+        credit_value = credit_value,
+        is_borrow_type = is_borrow_type,
+        image_url = upload(image_data),
+        is_unfulfilled = True
+    )
+
 
     # Add item to the user's lending/borrowing list
     if is_borrow_type == True:
@@ -328,7 +317,7 @@ def update_item(user_id, item_id):
     location = body.get("location")
 
     credit_value = body.get("credit_value")
-    image_url = body.get("image_url")
+    image_data = body.get("image_data")
 
     if iname is not None:
         item.item_name = iname
@@ -336,11 +325,8 @@ def update_item(user_id, item_id):
         item.location =location
     if credit_value is not None:
         item.credit_value = credit_value
-    if image_url is not None:
-        item.image_url = image_url
-
- 
-
+    if image_data is not None:
+        item.url = upload(image_data)
 
     db.session.commit()
     return success_response(item.serialize(), 201)
@@ -394,20 +380,17 @@ def delete_item(user_id, item_id):
 # --------------------------------------------------------------
 # ----------------------- IMAGE REQUESTS ----------------------
 # --------------------------------------------------------------
-@app.route("/api/upload/", methods=["POST"])
-def upload():
+def upload(image_data):
     """
     Endpoint for uploading an image to AWS given its base64 form,
     then storing/returning the URL of that image
     """
-    body = json.loads(request.data)
-    image_data = body.get("image_data")
     if image_data is None:
         return failure_response("No base64 image found")
     asset = Asset(image_data = image_data)
     db.session.add(asset)
     db.session.commit()
-    return success_response(asset.serialize(),201)
+    return asset.serialize()
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8000, debug=True)
