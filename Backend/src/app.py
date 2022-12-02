@@ -190,7 +190,7 @@ def delete_user(user_id):
 # --------------------------------------------------------------
 
 # --------------------- ITEM INFORMATION------------------------
-@app.route("/api/items/") # TODO: Delete later, for testing
+@app.route("/api/items/")
 def get_all_items():
     """
     Endpoint for getting all items
@@ -226,9 +226,7 @@ def get_user_borrowing_items(user_id):
     user = User.query.filter_by(id= user_id).first()
     if user is None:
         return failure_response("user not found",404)
-    items = []
-    for a in user.items:
-        items.append(a.public_serialize())
+    items = [item.serialize() for item in user.borrow_items]
     return success_response({"borrow requests":items})
 
 # --------------------- LENT ITEM INFORMATION----------------------
@@ -249,9 +247,7 @@ def get_user_lending_items(user_id):
     user = User.query.filter_by(id= user_id).first()
     if user is None:
         return failure_response("This user was not found",404)
-    items = []
-    for a in user.items:
-        items.append(a.public_serialize())
+    items = [item.serialize() for item in user.lend_items]
     return success_response({"lending_items": items})
 
 # --------------------- SAVED ITEM INFORMATION----------------------
@@ -304,7 +300,6 @@ def create_item(user_id):
             return failure_response("please enter a date in the future", 400)
     except:
         return failure_response("due_date not in proper format! Please enter Month/Day/Year hour[in 24 hour format]. ex '09/19/18 13'", 400)
-    # TODO: FIX ITEM PROBLEM
     # Create an item
     new_item = Item(
         item_name = item_name,
