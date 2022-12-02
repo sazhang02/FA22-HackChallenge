@@ -45,6 +45,8 @@ class User(db.Model):
     credit = db.Column(db.Integer, nullable = False)
     rating = db.Column(db.Integer, nullable = False)
     profile_image_url= db.Column(db.String)
+    num_transactions = db.Column(db.Integer, nullable = False)
+    num_ratings =  db.Column(db.Integer, nullable = False)
 
     saved_items = db.relationship("Item", secondary=saved_assoc, back_populates='saved_users')
     borrow_items = db.relationship("Item", secondary=borrow_assoc, back_populates='borrow_users')
@@ -60,7 +62,9 @@ class User(db.Model):
             "username": self.username,
             "credit": self.credit,
             "rating": self.rating,
-            "profile_image_url": self.profile_image_url
+            "profile_image_url": self.profile_image_url,
+            "num_transactions": self.num_transactions,
+            "num_ratings": self.num_ratings
         }
 
     def serialize(self):
@@ -76,7 +80,9 @@ class User(db.Model):
             "profile_image_url": self.profile_image_url,
             "lend_items": [l.public_serialize() for l in self.lend_items],
             "borrow_items": [b.public_serialize() for b in self.borrow_items],
-            "saved_items": [s.public_serialize() for s in self.saved_items]
+            "saved_items": [s.public_serialize() for s in self.saved_items],
+            "num_transactions": self.num_transactions,
+            "num_ratings": self.num_ratings
         }
 
 
@@ -97,9 +103,11 @@ class Item(db.Model):
     borrow_users = db.relationship("User", secondary=borrow_assoc, back_populates='borrow_items')
     lend_users = db.relationship("User", secondary=lend_assoc, back_populates='lend_items')
     is_borrow_type = db.Column(db.Boolean, nullable = False)
-    credit_value = db.Column(db.Integer, nullable = False)
+    credit = db.Column(db.Integer, nullable = False)
     is_unfulfilled = db.Column(db.Boolean, nullable = False)
     image_url = db.Column(db.String, nullable = True)
+    poster_is_rated = db.Column(db.Boolean, nullable = False)
+    fulfiller_is_rated = db.Column(db.Boolean, nullable = False)
 
     # def __init__(self, **kwargs):
     #     """
@@ -111,7 +119,7 @@ class Item(db.Model):
     #     self.location = kwargs.get("location")
     #     self.poster_id = kwargs.get("poster_id")
     #     self.fulfiller_id = None
-    #     self.credit_value = kwargs.get("credit_value")
+    #     self.credit = kwargs.get("credit")
     #     self.is_borrow_type = kwargs.get("is_borrow_type")
     #     self.is_unfulfilled = True
     #     self.image_url = kwargs.get("image_url")
@@ -134,10 +142,12 @@ class Item(db.Model):
             "location": self.location,
             "poster_user": serialized_poster,
             "fulfiller_user": serialized_fulfiller,
-            "credit_value": self.credit_value,
+            "credit": self.credit,
             "is_borrow_type": self.is_borrow_type,
             "is_unfulfilled": self.is_unfulfilled,
-            "image_url": self.image_url
+            "image_url": self.image_url,
+            "poster_is_rated": self.poster_is_rated,
+            "fulfiller_is_rated": self.fulfiller_is_rated
         }
 
     def public_serialize(self):

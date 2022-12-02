@@ -23,6 +23,21 @@ with app.app_context():
     db.create_all()
 
 # --------------------------------------------------------------
+# ----------------------- IMAGE REQUESTS ----------------------
+# --------------------------------------------------------------
+def upload(image_data):
+    """
+    Endpoint for uploading an image to AWS given its base64 form,
+    then storing/returning the URL of that image
+    """
+    if image_data is None:
+        return failure_response("No base64 image found",)
+    asset = Asset(image_data = image_data)
+    db.session.add(asset)
+    db.session.commit()
+    return asset.serialize().get("url")
+
+# --------------------------------------------------------------
 # --------------------------------------------------------------
 # ----------------------- USER ENDPOINTS -----------------------
 # --------------------------------------------------------------
@@ -54,7 +69,7 @@ def get_user(user_id):
     """
     user = User.query.filter_by(id=user_id).first()
     if user is None:
-        return failure_response("user not found")
+        return failure_response("user not found",404)
     return success_response(user.serialize())
 
 # --------------------------------------------------------------
@@ -79,6 +94,8 @@ def create_user():
         credit=20,
         rating=5,
         profile_image_url=None,
+        num_transactions=0,
+        num_ratings=1 # default rating 5 leeway to start them off
         )
 
     db.session.add(new_user)
@@ -93,7 +110,7 @@ def update_user(user_id):
     """
     user = User.query.filter_by(id= user_id).first()
     if user is None:
-        return failure_response("user not found")
+        return failure_response("user not found",404)
     body = json.loads(request.data)
     uname = body.get("username")
     e = body.get("email")
@@ -110,6 +127,8 @@ def update_user(user_id):
     db.session.commit()
     return success_response(user.serialize(), 201)
 
+
+
 # --------------------------------------------------------------
 # ------------------------- DELETE REQUESTS -----------------------
 # --------------------------------------------------------------
@@ -124,7 +143,7 @@ def delete_user(user_id):
         return failure_response("user not found", 404)
     db.session.delete(user)
     db.session.commit()
-    return success_response(user.serialize(), 201)
+    return success_response(user.serialize(), 202)
 
 # --------------------------------------------------------------
 # --------------------------------------------------------------
@@ -155,7 +174,7 @@ def get_item(item_id):
     """
     item = Item.query.filter_by(id=item_id).first()
     if item is None:
-        return failure_response("item not found")
+        return failure_response("item not found",404)
     return success_response(item.serialize())
 
 # --------------------- BORROWED ITEM INFORMATION------------------
@@ -165,7 +184,7 @@ def get_all_borrowing_items():
     get all the borrowing items in database
     """
     lst = [item.serialize() for item in Item.query.all() if item.is_borrow_type]
-    return success_response({"borrow requests":lst}, 201)
+    return success_response({"borrow requests":lst})
 
 @app.route("/api/items/borrow/<int:user_id>/")
 def get_user_borrowing_items(user_id):
@@ -174,11 +193,11 @@ def get_user_borrowing_items(user_id):
     """
     user = User.query.filter_by(id= user_id).first()
     if user is None:
-        return failure_response("user not found")
+        return failure_response("user not found",404)
     items = []
     for a in user.items:
         items.append(a.public_serialize())
-    return success_response({"borrow requests":items}, 201)
+    return success_response({"borrow requests":items})
 
 # --------------------- LENT ITEM INFORMATION----------------------
 @app.route("/api/items/lend/")
@@ -187,7 +206,7 @@ def get_all_lending_items():
     get all the lending items in database
     """
     lst = [item.serialize() for item in Item.query.all() if not item.is_borrow_type]
-    return success_response({"lending items":lst}, 201)
+    return success_response({"lending_items":lst})
 
 
 @app.route("/api/items/lend/<int:user_id>/")
@@ -197,11 +216,11 @@ def get_user_lending_items(user_id):
     """
     user = User.query.filter_by(id= user_id).first()
     if user is None:
-        return failure_response("user not found")
+        return failure_response("This user was not found",404)
     items = []
     for a in user.items:
         items.append(a.public_serialize())
-    return success_response({"lending items":items}, 201)
+    return success_response({"lending_items": items})
 
 # --------------------- SAVED ITEM INFORMATION----------------------
 
@@ -214,7 +233,7 @@ def get_user_saved_items(user_id):
     if user is None:
         return failure_response("This user was not found")
     saved_items = [s.serialize for s in user.saved_items]
-    return success_response({"saved items":saved_items}, 201)
+    return success_response({"saved items":saved_items})
 
 # --------------------------------------------------------------
 # ----------------------- POST REQUESTS ------------------------
@@ -227,14 +246,14 @@ def create_item(user_id):
     """
     user = User.query.filter_by(id= user_id).first()
     if user is None:
-        return failure_response("user not found")
+        return failure_response("user not found",404)
     body = json.loads(request.data)
 
     # Process request body if the user IS found
     item_name = body.get("item_name")
     due_date_str = body.get("due_date")
     location = body.get("location")
-    credit_value = body.get("credit_value")
+    credit = body.get("credit")
     is_borrow_type = body.get("is_borrow_type")
     image_data = body.get("image_data")
 
@@ -243,7 +262,7 @@ def create_item(user_id):
         item_name is None or 
         due_date_str is None or 
         location is None or
-        credit_value is None or
+        credit is None or
         is_borrow_type is None or
         image_data is None):
         return failure_response("Missing parameters!", 400)
@@ -260,10 +279,12 @@ def create_item(user_id):
         due_date = due_date,
         location = location,
         poster_id = user_id,
-        credit_value = credit_value,
+        credit = credit,
         is_borrow_type = is_borrow_type,
         image_url = upload(image_data),
-        is_unfulfilled = True
+        is_unfulfilled = True,
+        poster_is_rated = False,
+        fulfiller_is_rated = False
     )
     # Add item to the user's lending/borrowing list
     if is_borrow_type == True:
@@ -292,30 +313,30 @@ def update_item(user_id, item_id):
     item = Item.query.filter_by(id= item_id).first()
 
     if item is None:
-        return failure_response("item not found")
+        return failure_response("item not found",404)
     body = json.loads(request.data)
 
     if item.poster_id != user_id:
-        return failure_response("user does not have permission to edit this post")
+        return failure_response("user does not have permission to edit this post",403)
 
     if not item.is_unfulfilled:
         # This post has been accepted between two users, so we should not allow 
         # any edits to the post after this point
-        return failure_response("The details of this post cannot be edited when it is being processed.")
+        return failure_response("The details of this post cannot be edited when it is being processed.",403)
 
     iname = body.get("item_name")
     # due_date = due_date,
     location = body.get("location")
 
-    credit_value = body.get("credit_value")
+    credit = body.get("credit")
     image_data = body.get("image_data")
 
     if iname is not None:
         item.item_name = iname
     if location is not None:
         item.location =location
-    if credit_value is not None:
-        item.credit_value = credit_value
+    if credit is not None:
+        item.credit = credit
     if image_data is not None:
         item.url = upload(image_data)
 
@@ -329,27 +350,121 @@ def save_item(user_id, item_id):
     """
     user = User.query.filter_by(id= user_id).first()
     if user is None:
-        return failure_response("user not found")
+        return failure_response("user not found",404)
 
     item = Item.query.filter_by(id=item_id).first()
 
     if item is None:
-        return failure_response("item not found")
+        return failure_response("item not found",404)
     if item in user.saved_items :
-        return failure_response("item already saved")
+        return failure_response("item already saved",403)
    
     user.saved_items.append(item)
     db.session.commit()
     return success_response(user.serialize(), 201)
 
-# TODO: ADD an accept post function to allow make fulfiller for a post
-@app.route("/api/items/saved/<int:user_id>/<int:item_id>/", methods = ['POST'])
+@app.route("/api/items/fulfill/<int:user_id>/<int:item_id>/", methods = ['POST'])
 def fulfill_item(user_id, item_id):
     """
     Endpoint to add the user of user_id as a fulfiller for item of item_id.   
     """
-    # TODO: set transaction for date finished?
-    pass
+    user = User.query.filter_by(id= user_id).first()
+    if user is None:
+        return failure_response("This user was not found", 404)
+
+    item = Item.query.filter_by(id=item_id).first()
+
+    if item is None:
+        return failure_response("This item was not found", 404)
+
+    if not item.is_unfulfilled:
+        return failure_response("This item is already has another user fulfilling this request", 403)
+
+    # Conduct a transaction between the two users
+    poster_user = User.query.filter_by(id= item.poster_id).first()
+
+    if poster_user is None:
+        return failure_response("The poster for this item was not found. Transaction couldn't be completed", 404)
+
+    if item.poster_id == user_id:
+        return failure_response("User cannot fulfill their own item request", 403) # cannot fulfill their own transaction
+
+    item_credit_value = item.credit
+
+    # Conduct transaction
+    if item.is_borrow_type:
+        # User is lending to poster
+        # User wants to lend an item to poster_user with a cost of item_credit_value
+        if poster_user.credit < item_credit_value:
+            return failure_response("This user cannot lend their item since the poster doesn't have enough credits to borrow their item at this time.", 403)
+        
+        poster_user.credit -= item_credit_value
+        user.credit += item_credit_value
+        # Update user state, add lent items
+        user.lend_items.append(item)
+
+    else:
+        # User is borrowing from the poster
+        # User wants to borrow item from poster_user giving item_credit_value
+        if user.credit < item_credit_value:
+            return failure_response("This user cannot borrow this item since they doesn't have enough credits.", 403)
+        user.credit -= item_credit_value
+        poster_user.credit += item_credit_value
+        # Update user state, add borrowed items
+        user.borrow_items.append(item)
+
+    # Update item state
+    item.fulfiller_id = user.id # Add user as a fulfiller for the item of item_id
+    item.is_unfulfilled = False # Transaction is now fulfilled
+
+    db.session.commit()
+    # Future plan:
+    # Add a report system to affect ratings if users don't deliver on rating
+
+    return success_response(item.serialize(), 201)
+
+@app.route("/api/items/rating/<int:item_id>/", methods = ['POST'])
+def rate_transaction(item_id):
+    """
+    Endpoint to submit the user_rating after the transaction
+    """
+    
+    item = Item.query.filter_by(id=item_id).first()
+    if item is None:
+        return failure_response("This item was not found", 404)
+    body = json.loads(request.data)
+    
+    user_id = body.get("user_id") # user that is DOING the rating
+    rating = body.get("rating")
+
+    user = User.query.filter_by(id = user_id).first()
+    if user.id == item.poster_id:
+        # poster rating the fulfiller
+        if item.fulfiller_is_rated:
+            return failure_response("This user already rated this transaction", 403)
+        user_being_rated = User.query.filter_by(id = item.fulfiller_id).first()
+        item.fulfiller_is_rated = True
+    elif user.id == item.fulfiller_id:
+        # fulfiller rating the poster
+        if item.poster_is_rated:
+            return failure_response("This user already rated this transaction", 403)
+        user_being_rated = User.query.filter_by(id = item.poster_id).first()
+        item.poster_is_rated = True
+    else:
+        return failure_response("This user is not involved with this transaction, so they cannot rate the users.", 403)
+
+    if type(rating) != float or rating > 5 or rating < 0:
+        return failure_response("Invalid rating. Please put in an number from 0 to 5", 403)
+
+    total_rating_sum = user_being_rated.rating * (user_being_rated.num_ratings)
+    total_rating_sum += rating # Add this new rating
+    user_being_rated.num_ratings += 1
+    user_being_rated.rating = total_rating_sum/user_being_rated.num_ratings 
+   
+
+    db.session.commit()
+    return success_response(item.serialize(), 201)
+
 
 # --------------------------------------------------------------
 # ----------------------- DELETE REQUESTS ----------------------
@@ -363,34 +478,18 @@ def delete_item(user_id, item_id):
     item = Item.query.filter_by(id= item_id).first()
 
     if item is None:
-        return failure_response("item not found")
+        return failure_response("item not found",404)
     if item.poster_id != user_id:
-        return failure_response("user does not have permission to edit this post")
+        return failure_response("user does not have permission to edit this post",403)
     
     if not item.is_unfulfilled:
         # We make it so you can't delete an item that is being fulfilled so
         # users can't cut the transaction short.
-        return failure_response("Can't delete an item that is in the process of being fulfilled")
+        return failure_response("Can't delete an item that is in the process of being fulfilled",403)
 
     db.session.delete(item)
     db.session.commit()
-    return success_response(item.serialize(), 201)
+    return success_response(item.serialize(), 202)
     
-# --------------------------------------------------------------
-# ----------------------- IMAGE REQUESTS ----------------------
-# --------------------------------------------------------------
-def upload(image_data):
-    """
-    Endpoint for uploading an image to AWS given its base64 form,
-    then storing/returning the URL of that image
-    """
-    if image_data is None:
-        return failure_response("No base64 image found")
-    asset = Asset(image_data = image_data)
-    db.session.add(asset)
-    db.session.commit()
-    return asset.serialize().get("url")
-
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8000, debug=True)
-
