@@ -103,15 +103,7 @@ def create_user():
     email=body.get('email')
     if username is None or email is None:
         return failure_response("please provide a username and email",400)
-
-    # if not fullmatch(email_regex, email):
-    #     return failure_response("This is not a valid email address.", 400)
-
-    # if email[email.rindex('@'):] != "@cornell.edu":
-    #     return failure_response("Please use a Cornell email address", 403)
-
-    # if (User.query.filter_by(email= email).first() != None):
-    #     return failure_response("A user with this email already exists. Please use a new email address.", 403)
+        
     valid_email, failure_response = validate_email(email)
     if not valid_email:
         return failure_response
