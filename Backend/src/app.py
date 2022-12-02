@@ -80,7 +80,7 @@ def get_user(user_id):
 # ------------------------ POST REQUESTS -----------------------
 # --------------------------------------------------------------
 
-def validate_email(email):
+def is_valid_email(email):
     """
     Returns True if the email is valid and False otherwise. An email is valid
     if it follows an email format (e.g. email_name@domain) and the domain is @cornell.edu.
@@ -110,7 +110,7 @@ def create_user():
     if username is None or email is None:
         return failure_response("Please provide a username and email.",400)
 
-    valid_email, failure_response = validate_email(email)
+    valid_email, failure_response = is_valid_email(email)
     if not valid_email:
         return failure_response
 
@@ -144,7 +144,7 @@ def update_user(user_id):
     image=body.get("profile_image_url")
 
     if email is not None:
-        valid_email, failure_response = validate_email(email)
+        valid_email, failure_response = is_valid_email(email)
         if not valid_email:
             return failure_response
         user.email = email
@@ -258,13 +258,30 @@ def get_user_saved_items(user_id):
     user = User.query.filter_by(id= user_id).first()
     if user is None:
         return failure_response(user_not_found, 404)
-    saved_items = [s.serialize for s in user.saved_items]
+    saved_items = [s.serialize() for s in user.saved_items]
     return success_response({"saved_items":saved_items})
 
 # --------------------------------------------------------------
 # ----------------------- POST REQUESTS ------------------------
 # --------------------------------------------------------------
+def is_valid_date(due_date_str):
+    """"
+    Returns True if the date is valid and False otherwise. An date is valid
+    if is formatted Month/Day/Year hour[in 24 hour format] and 
+    the date has not passed. For example: '09/19/25 13'.
 
+    Also, returns a failure response respectively or the properly formatted due date.
+    """
+
+    try:
+        due_date = datetime.strptime(due_date_str, '%m/%d/%y %H')
+        if due_date < datetime.now():
+            return False, failure_response("This date already passed. Please enter a date in the future.", 400)
+    except:
+        return False, failure_response("The due_date not in the proper format! Please enter Month/Day/Year hour[in 24 hour format]. For example: '09/19/18 13'.", 400)
+
+    return True, due_date
+    
 @app.route("/api/items/<int:user_id>/", methods=["POST"])
 def create_item(user_id):
     """
@@ -277,7 +294,7 @@ def create_item(user_id):
 
     # Process request body if the user IS found
     item_name = body.get("item_name")
-    due_date_str = body.get("due_date")
+    due_date = body.get("due_date")
     location = body.get("location")
     credit = body.get("credit")
     is_borrow_type = body.get("is_borrow_type")
@@ -286,19 +303,19 @@ def create_item(user_id):
     # Check if request input is valid
     if (
         item_name is None or 
-        due_date_str is None or 
+        due_date is None or 
         location is None or
         credit is None or
         is_borrow_type is None or
         image_data is None):
-        return failure_response("Missing parameters! Please enter item_name, due_date_str, location, credit, is_borrow_type, and image_data.", 400)
-    try:
-        due_date = datetime.strptime(due_date_str, '%m/%d/%y %H')
-        if due_date < datetime.now():
-            return failure_response("This date already passed. Please enter a date in the future.", 400)
-    except:
-        return failure_response("The due_date not in the proper format! Please enter Month/Day/Year hour[in 24 hour format]. For example: '09/19/18 13'.", 400)
-    
+        return failure_response("Missing parameters! Please enter item_name, due_date, location, credit, is_borrow_type, and image_data.", 400)
+
+    success, response = is_valid_date(due_date)
+    if not success:
+        return response
+    else:
+        due_date = response
+
     # Create an item
     new_item = Item(
         item_name = item_name,
@@ -345,15 +362,22 @@ def update_item(user_id, item_id):
         # any edits to the post after this point
         return failure_response("The details of this post cannot be edited when it is being processed.",403)
 
-    iname = body.get("item_name")
-    # due_date = due_date,
+    item_name = body.get("item_name")
+    due_date = body.get("due_date")
     location = body.get("location")
 
     credit = body.get("credit")
     image_data = body.get("image_data")
 
-    if iname is not None:
-        item.item_name = iname
+    if due_date is not None:
+        success, response = is_valid_date(due_date)
+        if not success:
+            return response
+        else:
+            item.due_date = response
+
+    if item_name is not None:
+        item.item_name = item_name
     if location is not None:
         item.location =location
     if credit is not None:
@@ -494,7 +518,7 @@ def rate_transaction(item_id):
 @app.route("/api/items/<int:user_id>/<int:item_id>/", methods = ['DELETE'])
 def delete_item(user_id, item_id):
     """
-    Endpoint for user of user_id to delete an item by item_id
+    Endpoint for user of user_id to delete an item by item_id.
     """
     item = Item.query.filter_by(id= item_id).first()
 

@@ -109,21 +109,6 @@ class Item(db.Model):
     poster_is_rated = db.Column(db.Boolean, nullable = False)
     fulfiller_is_rated = db.Column(db.Boolean, nullable = False)
 
-    # def __init__(self, **kwargs):
-    #     """
-    #     Initializes a Item object
-    #     """
-    #     # self.item_name = kwargs.get("item_name")
-    #     # TODO: imlement datetime functionality
-    #     # self.due_date = kwargs.get("due_date")
-    #     self.location = kwargs.get("location")
-    #     self.poster_id = kwargs.get("poster_id")
-    #     self.fulfiller_id = None
-    #     self.credit = kwargs.get("credit")
-    #     self.is_borrow_type = kwargs.get("is_borrow_type")
-    #     self.is_unfulfilled = True
-    #     self.image_url = kwargs.get("image_url")
-
     def serialize(self):    
         """
         Serializes a Item object
