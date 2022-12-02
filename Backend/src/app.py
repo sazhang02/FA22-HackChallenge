@@ -22,6 +22,10 @@ db.init_app(app)
 with app.app_context():
     db.create_all()
 
+# Different response text
+user_not_found = "This user was not found."
+item_not_found = "This item was not found."
+
 # --------------------------------------------------------------
 # ----------------------- IMAGE REQUESTS ----------------------
 # --------------------------------------------------------------
@@ -69,7 +73,7 @@ def get_user(user_id):
     """
     user = User.query.filter_by(id=user_id).first()
     if user is None:
-        return failure_response("user not found",404)
+        return failure_response(user_not_found,404)
     return success_response(user.serialize())
 
 # --------------------------------------------------------------
@@ -91,8 +95,10 @@ def validate_email(email):
 
     if (User.query.filter_by(email= email).first() != None):
         return False, failure_response("A user with this email already exists. Please use a new email address.", 403)
-    
+
     return True, None
+
+
 @app.route("/api/users/", methods=["POST"])
 def create_user():
     """
@@ -102,8 +108,8 @@ def create_user():
     username=body.get('username')
     email=body.get('email')
     if username is None or email is None:
-        return failure_response("please provide a username and email",400)
-        
+        return failure_response("Please provide a username and email.",400)
+
     valid_email, failure_response = validate_email(email)
     if not valid_email:
         return failure_response
@@ -130,7 +136,7 @@ def update_user(user_id):
     """
     user = User.query.filter_by(id= user_id).first()
     if user is None:
-        return failure_response("This user was not found",404)
+        return failure_response(user_not_found,404)
     body = json.loads(request.data)
 
     username = body.get("username")
@@ -164,7 +170,7 @@ def delete_user(user_id):
     """
     user=User.query.filter_by(id=user_id).first()
     if user is None:
-        return failure_response("user not found", 404)
+        return failure_response(user_not_found, 404)
     db.session.delete(user)
     db.session.commit()
     return success_response(user.serialize(), 202)
@@ -198,7 +204,7 @@ def get_item(item_id):
     """
     item = Item.query.filter_by(id=item_id).first()
     if item is None:
-        return failure_response("item not found",404)
+        return failure_response(item_not_found,404)
     return success_response(item.serialize())
 
 # --------------------- BORROWED ITEM INFORMATION------------------
@@ -217,7 +223,7 @@ def get_user_borrowing_items(user_id):
     """
     user = User.query.filter_by(id= user_id).first()
     if user is None:
-        return failure_response("user not found",404)
+        return failure_response(user_not_found,404)
     items = [item.serialize() for item in user.borrow_items]
     return success_response({"borrow requests":items})
 
@@ -238,7 +244,7 @@ def get_user_lending_items(user_id):
     """
     user = User.query.filter_by(id= user_id).first()
     if user is None:
-        return failure_response("This user was not found",404)
+        return failure_response(user_not_found,404)
     items = [item.serialize() for item in user.lend_items]
     return success_response({"lending_items": items})
 
@@ -251,7 +257,7 @@ def get_user_saved_items(user_id):
     """
     user = User.query.filter_by(id= user_id).first()
     if user is None:
-        return failure_response("This user was not found")
+        return failure_response(user_not_found, 404)
     saved_items = [s.serialize for s in user.saved_items]
     return success_response({"saved items":saved_items})
 
@@ -266,7 +272,7 @@ def create_item(user_id):
     """
     user = User.query.filter_by(id= user_id).first()
     if user is None:
-        return failure_response("user not found",404)
+        return failure_response(user_not_found,404)
     body = json.loads(request.data)
 
     # Process request body if the user IS found
@@ -332,7 +338,7 @@ def update_item(user_id, item_id):
     item = Item.query.filter_by(id= item_id).first()
 
     if item is None:
-        return failure_response("item not found",404)
+        return failure_response(item_not_found, 404)
     body = json.loads(request.data)
 
     if item.poster_id != user_id:
@@ -369,12 +375,12 @@ def save_item(user_id, item_id):
     """
     user = User.query.filter_by(id= user_id).first()
     if user is None:
-        return failure_response("user not found",404)
+        return failure_response(user_not_found,404)
 
     item = Item.query.filter_by(id=item_id).first()
 
     if item is None:
-        return failure_response("item not found",404)
+        return failure_response(item_not_found,404)
     if item in user.saved_items :
         return failure_response("item already saved",403)
    
@@ -389,12 +395,12 @@ def fulfill_item(user_id, item_id):
     """
     user = User.query.filter_by(id= user_id).first()
     if user is None:
-        return failure_response("This user was not found", 404)
+        return failure_response(user_not_found, 404)
 
     item = Item.query.filter_by(id=item_id).first()
 
     if item is None:
-        return failure_response("This item was not found", 404)
+        return failure_response(item_not_found, 404)
 
     if not item.is_unfulfilled:
         return failure_response("This item is already has another user fulfilling this request", 403)
@@ -450,7 +456,7 @@ def rate_transaction(item_id):
     
     item = Item.query.filter_by(id=item_id).first()
     if item is None:
-        return failure_response("This item was not found", 404)
+        return failure_response(item_not_found, 404)
     body = json.loads(request.data)
     
     user_id = body.get("user_id") # user that is DOING the rating
@@ -497,7 +503,7 @@ def delete_item(user_id, item_id):
     item = Item.query.filter_by(id= item_id).first()
 
     if item is None:
-        return failure_response("item not found",404)
+        return failure_response(item_not_found,404)
     if item.poster_id != user_id:
         return failure_response("user does not have permission to edit this post",403)
     
