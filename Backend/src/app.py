@@ -98,6 +98,9 @@ def update_user(user_id):
     uname = body.get("username")
     e = body.get("email")
     image=body.get("profile_image_url")
+    # TODO: Check for cornell id
+    # if email:
+    #     return failure_response("Please input a @cornell.edu email",403)
     if uname is not None:
         user.username = uname
     if e is not None and fullmatch(email_regex, e):
@@ -150,7 +153,6 @@ def get_item(item_id):
     """
     Endpoint for getting an item by the item's item_id
     """
-    body = json.loads(request.data)
     item = Item.query.filter_by(id=item_id).first()
     if item is None:
         return failure_response("item not found")
@@ -162,7 +164,7 @@ def get_all_borrowing_items():
     """
     get all the borrowing items in database
     """
-    lst = [item.serialize() for item in Item.query.all()]
+    lst = [item.serialize() for item in Item.query.all() if item.is_borrow_type]
     return success_response({"borrow requests":lst}, 201)
 
 @app.route("/api/items/borrow/<int:user_id>/")
@@ -184,7 +186,7 @@ def get_all_lending_items():
     """
     get all the lending items in database
     """
-    lst = [item.serialize() for item in Item.query.all()]
+    lst = [item.serialize() for item in Item.query.all() if not item.is_borrow_type]
     return success_response({"lending items":lst}, 201)
 
 
@@ -242,7 +244,8 @@ def create_item(user_id):
         due_date_str is None or 
         location is None or
         credit_value is None or
-        is_borrow_type is None):
+        is_borrow_type is None or
+        image_data is None):
         return failure_response("Missing parameters!", 400)
     try:
         due_date = datetime.strptime(due_date_str, '%m/%d/%y %H')
@@ -250,6 +253,7 @@ def create_item(user_id):
             return failure_response("please enter a date in the future", 400)
     except:
         return failure_response("due_date not in proper format! Please enter Month/Day/Year hour[in 24 hour format]. ex '09/19/18 13'", 400)
+    # TODO: FIX ITEM PROBLEM
     # Create an item
     new_item = Item(
         item_name = item_name,
@@ -258,10 +262,10 @@ def create_item(user_id):
         poster_id = user_id,
         credit_value = credit_value,
         is_borrow_type = is_borrow_type,
-        image_url = upload(image_data),
+        image_data = upload(image_data),
         is_unfulfilled = True
     )
-
+    int("ITEM INITIALIZED")
     # Add item to the user's lending/borrowing list
     if is_borrow_type == True:
         # print("<><><><><><><><><>><<><<><<><><><><>><",user.items)
@@ -339,6 +343,14 @@ def save_item(user_id, item_id):
     user.saved_items.append(item)
     db.session.commit()
     return success_response(user.serialize(), 201)
+
+# TODO: ADD an accept post function to allow make fulfiller for a post
+@app.route("/api/items/saved/<int:user_id>/<int:item_id>/", methods = ['POST'])
+def fulfill_item(user_id, item_id):
+    """
+    Endpoint to add the user of user_id as a fulfiller for item of item_id.   
+    """
+    pass
 
 # --------------------------------------------------------------
 # ----------------------- DELETE REQUESTS ----------------------

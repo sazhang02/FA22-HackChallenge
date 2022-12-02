@@ -169,12 +169,15 @@ class Asset(db.Model):
         Initializes an Image object
         """
         self.create(kwargs.get("image_data"))
+        print("SUCCESSFULLY INITILIZE IMAGE DATA")
 
     def serialize(self):
         """
         Serializes an Image Object
         """
-        return f"{self.base_url}/{self.salt}.{self.extension}"
+        return {
+            "url":f"{self.base_url}/{self.salt}.{self.extension}",
+            "created_at": str(self.created_at)}
     def create(self, image_data):
         """
         Given an image in base64 encoding, does the following:
@@ -194,7 +197,9 @@ class Asset(db.Model):
             )
             print("<><<><><><<<<><<><><><>><<><><><><><><><> create function")
             img_str=re.sub("^data:image/.+;base64,","",image_data)
+            print("THE BASE URL SHOULD BE ", S3_BASE_URL)
             img_data=base64.b64decode(img_str)
+            print("THE BASE URL IS ", self.base_url)
             img = Image.open(BytesIO(img_data))
             self.base_url = S3_BASE_URL
             self.salt = salt
