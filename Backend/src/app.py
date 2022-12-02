@@ -262,10 +262,9 @@ def create_item(user_id):
         poster_id = user_id,
         credit_value = credit_value,
         is_borrow_type = is_borrow_type,
-        image_data = upload(image_data),
+        image_url = upload(image_data),
         is_unfulfilled = True
     )
-    int("ITEM INITIALIZED")
     # Add item to the user's lending/borrowing list
     if is_borrow_type == True:
         # print("<><><><><><><><><>><<><<><<><><><><>><",user.items)
@@ -390,7 +389,7 @@ def upload(image_data):
     asset = Asset(image_data = image_data)
     db.session.add(asset)
     db.session.commit()
-    return asset.serialize()
+    return asset.serialize().get("url")
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8000, debug=True)
