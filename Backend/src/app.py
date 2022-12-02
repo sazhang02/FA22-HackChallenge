@@ -141,7 +141,7 @@ def get_all_items():
     """
     Endpoint for getting all items
     """
-    items = [item.serialize() for item in Item.query.all()] + [item.serialize() for item in Item.query.all()]
+    items = [item.serialize() for item in Item.query.all()]
     return success_response({"items": items})
 
 
@@ -151,12 +151,7 @@ def get_item(item_id):
     Endpoint for getting an item by the item's item_id
     """
     body = json.loads(request.data)
-    is_borrow_type = body.get("is_borrow_type")
-    item = None
-    if is_borrow_type:
-        item = Item.query.filter_by(id=item_id).first()
-    else:
-        item = Item.query.filter_by(id=item_id).first()
+    item = Item.query.filter_by(id=item_id).first()
     if item is None:
         return failure_response("item not found")
     return success_response(item.serialize())
@@ -216,7 +211,7 @@ def get_user_saved_items(user_id):
     user = User.query.filter_by(id= user_id).first()
     if user is None:
         return failure_response("This user was not found")
-    saved_items = [s.serialize for s in user.saved_items + user.saved_items]
+    saved_items = [s.serialize for s in user.saved_items]
     return success_response({"saved items":saved_items}, 201)
 
 # --------------------------------------------------------------
@@ -256,7 +251,10 @@ def create_item(user_id):
     except:
         return failure_response("due_date not in proper format! Please enter Month/Day/Year hour[in 24 hour format]. ex '09/19/18 13'", 400)
     # Create an item
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
     new_item = Item(
         item_name = item_name,
         due_date = due_date,
@@ -264,7 +262,11 @@ def create_item(user_id):
         poster_id = user_id,
         credit_value = credit_value,
         is_borrow_type = is_borrow_type,
+<<<<<<< Updated upstream
         image_url = upload(image_data),
+=======
+        image_url = image_url,
+>>>>>>> Stashed changes
         is_unfulfilled = True
     )
 
@@ -293,12 +295,8 @@ def update_item(user_id, item_id):
     """
    
     body = json.loads(request.data)
-    is_borrow_type = body.get("is_borrow_type")
-    item = None
-    if is_borrow_type:
-        item = Item.query.filter_by(id=item_id).first()
-    else:
-        item = Item.query.filter_by(id=item_id).first()
+    item = Item.query.filter_by(id= item_id).first()
+
     if item is None:
         return failure_response("item not found")
     body = json.loads(request.data)
@@ -361,12 +359,8 @@ def delete_item(user_id, item_id):
     delete an item
     """
     body = json.loads(request.data)
-    is_borrow_type = body.get("is_borrow_type")
-    item = None
-    if is_borrow_type:
-        item = Item.query.filter_by(id=item_id).first()
-    else:
-        item = Item.query.filter_by(id=item_id).first()
+    item = Item.query.filter_by(id= item_id).first()
+
     if item is None:
         return failure_response("item not found")
     if item.poster_id != user_id:
