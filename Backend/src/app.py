@@ -53,14 +53,14 @@ def upload(image_data):
 @app.route("/")
 def greet_user():
     """
-    Endpoint to greet users
+    Endpoint to greet users.
     """
     return "Welcome to ShareVerse!"
 
 @app.route("/api/users/")
 def get_all_users():
     """
-    Endpoint for getting all users
+    Endpoint for getting all available users.
     """
     users = [user.serialize() for user in User.query.all()]
     return success_response({"users": users})
@@ -69,7 +69,7 @@ def get_all_users():
 @app.route("/api/users/<int:user_id>/")
 def get_user(user_id):
     """
-    get a specific user by id user_id
+    Endpoint to get a specific user by id user_id.
     """
     user = User.query.filter_by(id=user_id).first()
     if user is None:
@@ -102,7 +102,7 @@ def validate_email(email):
 @app.route("/api/users/", methods=["POST"])
 def create_user():
     """
-    create a user
+    Endpoint to create a user.
     """
     body = json.loads(request.data)
     username=body.get('username')
@@ -132,7 +132,7 @@ def create_user():
 @app.route("/api/users/<int:user_id>/", methods = ['POST'])
 def update_user(user_id):
     """
-    update an user with id user_id
+    Endpoint to update an user with id user_id's account information.
     """
     user = User.query.filter_by(id= user_id).first()
     if user is None:
@@ -166,7 +166,7 @@ def update_user(user_id):
 @app.route("/api/users/<int:user_id>/", methods = ['DELETE'])
 def delete_user(user_id):
     """
-    delete a user
+    Endpoint to delete a user.
     """
     user=User.query.filter_by(id=user_id).first()
     if user is None:
@@ -191,7 +191,7 @@ def delete_user(user_id):
 @app.route("/api/items/")
 def get_all_items():
     """
-    Endpoint for getting all items
+    Endpoint for getting all items posts.
     """
     items = [item.serialize() for item in Item.query.all()]
     return success_response({"items": items})
@@ -200,7 +200,7 @@ def get_all_items():
 @app.route("/api/items/<int:item_id>/") 
 def get_item(item_id):
     """
-    Endpoint for getting an item by the item's item_id
+    Endpoint for getting an item by the item's item_id.
     """
     item = Item.query.filter_by(id=item_id).first()
     if item is None:
@@ -211,27 +211,27 @@ def get_item(item_id):
 @app.route("/api/items/borrow/")
 def get_all_borrowing_items():
     """
-    get all the borrowing items in database
+    Endpoint to get all available the borrow items requests.
     """
     lst = [item.serialize() for item in Item.query.all() if item.is_borrow_type]
-    return success_response({"borrow requests":lst})
+    return success_response({"borrow_requests":lst})
 
 @app.route("/api/items/borrow/<int:user_id>/")
 def get_user_borrowing_items(user_id):
     """
-    get all of the user's borrowing items
+    Endpoint to get all of the user of user_id's borrow item requests.
     """
     user = User.query.filter_by(id= user_id).first()
     if user is None:
         return failure_response(user_not_found,404)
     items = [item.serialize() for item in user.borrow_items]
-    return success_response({"borrow requests":items})
+    return success_response({"borrow_requests":items})
 
 # --------------------- LENT ITEM INFORMATION----------------------
 @app.route("/api/items/lend/")
 def get_all_lending_items():
     """
-    get all the lending items in database
+    Endpoint to get all available the lend items offers.
     """
     lst = [item.serialize() for item in Item.query.all() if not item.is_borrow_type]
     return success_response({"lending_items":lst})
@@ -240,7 +240,7 @@ def get_all_lending_items():
 @app.route("/api/items/lend/<int:user_id>/")
 def get_user_lending_items(user_id):
     """
-    get all of the user's lending items
+    Endpoint to get all of the user of user_id's lending item offers.
     """
     user = User.query.filter_by(id= user_id).first()
     if user is None:
@@ -253,13 +253,13 @@ def get_user_lending_items(user_id):
 @app.route("/api/items/saved/<int:user_id>/")
 def get_user_saved_items(user_id):
     """
-    get all of the user's saved items
+    Endpoint to get all of the user's saved items.
     """
     user = User.query.filter_by(id= user_id).first()
     if user is None:
         return failure_response(user_not_found, 404)
     saved_items = [s.serialize for s in user.saved_items]
-    return success_response({"saved items":saved_items})
+    return success_response({"saved_items":saved_items})
 
 # --------------------------------------------------------------
 # ----------------------- POST REQUESTS ------------------------
@@ -268,7 +268,7 @@ def get_user_saved_items(user_id):
 @app.route("/api/items/<int:user_id>/", methods=["POST"])
 def create_item(user_id):
     """
-    Endpoint for creating an item by user_id
+    Endpoint for creating an item by user_id.
     """
     user = User.query.filter_by(id= user_id).first()
     if user is None:
@@ -291,13 +291,14 @@ def create_item(user_id):
         credit is None or
         is_borrow_type is None or
         image_data is None):
-        return failure_response("Missing parameters!", 400)
+        return failure_response("Missing parameters! Please enter item_name, due_date_str, location, credit, is_borrow_type, and image_data.", 400)
     try:
         due_date = datetime.strptime(due_date_str, '%m/%d/%y %H')
         if due_date < datetime.now():
-            return failure_response("please enter a date in the future", 400)
+            return failure_response("This date already passed. Please enter a date in the future.", 400)
     except:
-        return failure_response("due_date not in proper format! Please enter Month/Day/Year hour[in 24 hour format]. ex '09/19/18 13'", 400)
+        return failure_response("The due_date not in the proper format! Please enter Month/Day/Year hour[in 24 hour format]. For example: '09/19/18 13'.", 400)
+    
     # Create an item
     new_item = Item(
         item_name = item_name,
@@ -311,29 +312,24 @@ def create_item(user_id):
         poster_is_rated = False,
         fulfiller_is_rated = False
     )
+
     # Add item to the user's lending/borrowing list
-    if is_borrow_type == True:
-        # print("<><><><><><><><><>><<><<><<><><><><>><",user.items)
-        # print("<><><><><><><><><>><<><<><<><><><><>><type type type type type",type(user.items))
+    if is_borrow_type:
         user.borrow_items.append(new_item)
-        print("<><><><><><><><><>><<><<><<><><><><>><",user.borrow_items)
     else: 
         user.lend_items.append(new_item)
-        print("asdasd<><><><><><><><><>><<><<><<><><><><>><",user.lend_items)
 
     # Add item to Item database
     db.session.add(new_item)
     db.session.commit()
-    # print(User.query.filter_by(id= user_id).first().items)
     return success_response(new_item.serialize(), 201)
 
 
 @app.route("/api/items/<int:user_id>/<int:item_id>/", methods = ['POST'])
 def update_item(user_id, item_id):
     """
-    update an item with id item_id
+    Endpoint for user of user_id to update an item with id item_id.
     """
-   
     body = json.loads(request.data)
     item = Item.query.filter_by(id= item_id).first()
 
@@ -342,7 +338,7 @@ def update_item(user_id, item_id):
     body = json.loads(request.data)
 
     if item.poster_id != user_id:
-        return failure_response("user does not have permission to edit this post",403)
+        return failure_response("This user does not have permission to edit this post since they aren't the poster.",403)
 
     if not item.is_unfulfilled:
         # This post has been accepted between two users, so we should not allow 
@@ -371,7 +367,7 @@ def update_item(user_id, item_id):
 @app.route("/api/items/saved/<int:user_id>/<int:item_id>/", methods = ['POST'])
 def save_item(user_id, item_id):
     """
-    save an item with to user's saved_items list
+    Endpoint to save an item of item_id to the saved_items list of user of user_id.
     """
     user = User.query.filter_by(id= user_id).first()
     if user is None:
@@ -382,7 +378,7 @@ def save_item(user_id, item_id):
     if item is None:
         return failure_response(item_not_found,404)
     if item in user.saved_items :
-        return failure_response("item already saved",403)
+        return failure_response("This item was already saved.",403)
    
     user.saved_items.append(item)
     db.session.commit()
@@ -403,16 +399,16 @@ def fulfill_item(user_id, item_id):
         return failure_response(item_not_found, 404)
 
     if not item.is_unfulfilled:
-        return failure_response("This item is already has another user fulfilling this request", 403)
+        return failure_response("This item is already has another user fulfilling this request.", 403)
 
     # Conduct a transaction between the two users
     poster_user = User.query.filter_by(id= item.poster_id).first()
 
     if poster_user is None:
-        return failure_response("The poster for this item was not found. Transaction couldn't be completed", 404)
+        return failure_response("The poster for this item was not found. Transaction couldn't be completed.", 404)
 
     if item.poster_id == user_id:
-        return failure_response("User cannot fulfill their own item request", 403) # cannot fulfill their own transaction
+        return failure_response("User cannot fulfill their own item request.", 403) # cannot fulfill their own transaction
 
     item_credit_value = item.credit
 
@@ -451,35 +447,35 @@ def fulfill_item(user_id, item_id):
 @app.route("/api/items/rating/<int:item_id>/", methods = ['POST'])
 def rate_transaction(item_id):
     """
-    Endpoint to submit the user_rating after the transaction
+    Endpoint to submit a user rating from user of rater_id 
+    after transaction has been made for item of item_id.
     """
-    
     item = Item.query.filter_by(id=item_id).first()
     if item is None:
         return failure_response(item_not_found, 404)
     body = json.loads(request.data)
     
-    user_id = body.get("user_id") # user that is DOING the rating
+    rater_id = body.get("rater_id") # user that is DOING the rating
     rating = body.get("rating")
 
-    user = User.query.filter_by(id = user_id).first()
+    user = User.query.filter_by(id = rater_id).first()
     if user.id == item.poster_id:
         # poster rating the fulfiller
         if item.fulfiller_is_rated:
-            return failure_response("This user already rated this transaction", 403)
+            return failure_response("This user already rated this transaction.", 403)
         user_being_rated = User.query.filter_by(id = item.fulfiller_id).first()
         item.fulfiller_is_rated = True
     elif user.id == item.fulfiller_id:
         # fulfiller rating the poster
         if item.poster_is_rated:
-            return failure_response("This user already rated this transaction", 403)
+            return failure_response("This user already rated this transaction.", 403)
         user_being_rated = User.query.filter_by(id = item.poster_id).first()
         item.poster_is_rated = True
     else:
         return failure_response("This user is not involved with this transaction, so they cannot rate the users.", 403)
 
     if type(rating) != float or rating > 5 or rating < 0:
-        return failure_response("Invalid rating. Please put in an number from 0 to 5", 403)
+        return failure_response("Invalid rating. Please put in an number from 0 to 5.", 403)
 
     total_rating_sum = user_being_rated.rating * (user_being_rated.num_ratings)
     total_rating_sum += rating # Add this new rating
@@ -498,19 +494,19 @@ def rate_transaction(item_id):
 @app.route("/api/items/<int:user_id>/<int:item_id>/", methods = ['DELETE'])
 def delete_item(user_id, item_id):
     """
-    delete an item
+    Endpoint for user of user_id to delete an item by item_id
     """
     item = Item.query.filter_by(id= item_id).first()
 
     if item is None:
         return failure_response(item_not_found,404)
     if item.poster_id != user_id:
-        return failure_response("user does not have permission to edit this post",403)
+        return failure_response("This user does not have permission to edit this post.",403)
     
     if not item.is_unfulfilled:
         # We make it so you can't delete an item that is being fulfilled so
         # users can't cut the transaction short.
-        return failure_response("Can't delete an item that is in the process of being fulfilled",403)
+        return failure_response("Can't delete an item that is in the process of being fulfilled.",403)
 
     db.session.delete(item)
     db.session.commit()
