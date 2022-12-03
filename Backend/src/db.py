@@ -146,7 +146,7 @@ class Item(db.Model):
 
 
 
-class Asset(db.Model):
+class Asset():
     """
     Image Model
     """

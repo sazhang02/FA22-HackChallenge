@@ -194,6 +194,44 @@ User with email already exists
 
 </details>
 
+## Fulfill a Request
+
+**POST** `/api/items/fulfill/2/1/`
+Response:
+
+```
+{
+    "id": 1,
+    "item_name": "Pot",
+    "due_date": "01/06/2023 17",
+    "location": "North Campus",
+    "poster_user": {
+        "id": 1,
+        "username": "new_username_2022",
+        "credit": 5,
+        "rating": 5,
+        "profile_image_url": null,
+        "num_transactions": 0,
+        "num_ratings": 1
+    },
+    "fulfiller_user": {
+        "id": 2,
+        "username": "best_app_2022",
+        "credit": 35,
+        "rating": 5,
+        "profile_image_url": null,
+        "num_transactions": 0,
+        "num_ratings": 1
+    },
+    "credit": 15,
+    "is_borrow_type": true,
+    "is_unfulfilled": false,
+    "image_url": "https://shareverse.s3.us-east-1.amazonaws.com/UPXUP315RHMPLDIN.jpg",
+    "poster_is_rated": false,
+    "fulfiller_is_rated": false
+}
+```
+
 ## Delete user by id
 
 **DELETE** `/api/users/{user_id}/`
@@ -599,7 +637,7 @@ Response:
     "credit": 15,
     "is_borrow_type": true,
     "is_unfulfilled": true,
-    "image_url": "https://shareverse.s3.us-east-1.amazonaws.com/AV862OZJRDADGS60.jpg",
+    "image_url": "https://shareverse.s3.us-east-1.amazonaws.com/<IMAGE HASH>.jpg",
     "poster_is_rated": false,
     "fulfiller_is_rated": false
 }
@@ -627,6 +665,102 @@ The user has already saved this item.
 ```
 <HTTP STATUS CODE 404>
 {"error": "item already saved"}
+```
+
+</details>
+
+## Rate an item transaction
+
+**POST** `/api/items/rating/<int:item_id>/`
+Request:
+
+```
+
+{
+    "rater_id":1,
+    "rating":4.0
+}
+```
+
+Response:
+
+```
+{
+    "id": 1,
+    "item_name": "Pot",
+    "due_date": "01/06/2023 17",
+    "location": "North Campus",
+    "poster_user": {
+        "id": 1,
+        "username": "new_username_2022",
+        "credit": 5,
+        "rating": 5,
+        "profile_image_url": null,
+        "num_transactions": 0,
+        "num_ratings": 1
+    },
+    "fulfiller_user": {
+        "id": 2,
+        "username": "best_app_2022",
+        "credit": 35,
+        "rating": 4.5,
+        "profile_image_url": null,
+        "num_transactions": 0,
+        "num_ratings": 2
+    },
+    "credit": 15,
+    "is_borrow_type": true,
+    "is_unfulfilled": false,
+    "image_url": "https://shareverse.s3.us-east-1.amazonaws.com/UPXUP315RHMPLDIN.jpg",
+    "poster_is_rated": false,
+    "fulfiller_is_rated": true
+}
+
+```
+
+<details>
+<summary>Failure Responses</summary>
+<br>
+The provided user cannot be found.
+
+```
+<HTTP STATUS CODE 404>
+{"error": "user not found"}
+```
+
+Empty rating or rater_id fields
+
+```
+<HTTP STATUS CODE 404>
+{"error": ""Please input a rating and a rater_id"}
+```
+
+This user already rated this transaction.
+
+```
+<HTTP STATUS CODE 403>
+{"error": "This user already rated this transaction."}
+```
+
+This user is not involved with this transaction, so they cannot rate the users.
+
+```
+<HTTP STATUS CODE 403>
+{"error": "This user is not involved with this transaction, so they cannot rate the users."}
+```
+
+Invalid rating. Please put in an number from 0 to 5.
+
+```
+<HTTP STATUS CODE 403>
+{"error": "Invalid rating. Please put in an number from 0 to 5."}
+```
+
+The user being rated does not exist
+
+```
+<HTTP STATUS CODE 403>
+{"error": "The user being rated does not exist"}
 ```
 
 </details>

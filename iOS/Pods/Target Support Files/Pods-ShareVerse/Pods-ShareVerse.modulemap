@@ -1,0 +1,6 @@
+framework module Pods_ShareVerse {
+  umbrella header "Pods-ShareVerse-umbrella.h"
+
+  export *
+  module * { export * }
+}
