@@ -1,3 +1,6 @@
+URL: http://34.86.48.110/
+Dockerhub: https://hub.docker.com/repository/docker/sazhang02/shareverse
+S3 Bucket for Images: 
 # USER ENDPOINTS
 
 ## Get all users
@@ -11,7 +14,7 @@ Response:
 {
     "users": [
         {
-            "id": 1,
+            "id": <ID>,
             "username": "best_app_2022",
             "email": "shareverse@cornell.edu",
             "credit": 20,
@@ -22,7 +25,21 @@ Response:
             "saved_items": [],
             "num_transactions": 0,
             "num_ratings": 1
+        },
+        {
+            "id": <ID>,
+            "username": <USERNAME FOR USER WITH ID {id}>,
+            "email": <STORED EMAIL FOR USER WITH ID {id}>,
+            "credit": <STORED CREDIT BALANCE FOR USER WITH ID {id}>,
+            "rating": <FLOAT FROM 1..5>,
+            "profile_image_url": <OPTIONAL STORED PROFILE IMAGE URL FOR USER WITH ID {id}>,
+            "lend_items": [<PARTIALLY SERIALIZED ITEMS>],
+            "borrow_items": [<PARTIALLY SERIALIZED ITEMS>],
+            "saved_items": [<PARTIALLY SERIALIZED ITEMS>],
+            "num_transactions": <NUMBER OF TRANSACTIONS THE USER DID>,
+            "num_ratings": <NUMBER OF RATINGS ON THIS USER>
         }
+        ...
     ]
 }
 ```
@@ -133,12 +150,11 @@ Request:
 ```
 {
   "username": "new_username_2022",
-  "email": "new_email@gmail.com",
-  "image_data": <base64 string of image>
+  "email": "new_email@gmail.com"
 }
 ```
 
-Note: All three parameters in the request body are optional
+Note: All parameters in the request body are optional
 
 Response:
 
@@ -162,11 +178,11 @@ Response:
 <details>
 <summary>Failure Responses</summary>
 <br>
-user not found
+The user was not found
 
 ```
 <HTTP STATUS CODE 404>
-{"error": "user not found"}
+{"error": "This user was not found."}
 ```
 
 Note: There is no failure response if the email is invalid, but if the email is invalid, the email field will not be updated.
@@ -247,9 +263,9 @@ Response:
     "credit": <STORED CREDIT BALANCE FOR USER WITH ID {id}>
     "rating": <STORED RATING FOR USER WITH ID {id}>
     "profile_image_url": <OPTIONAL STORED PROFILE IMAGE URL FOR USER WITH ID {id}>,
-    "lend_items": [ <SERIALIZED ITEMS WITHOUT LENDER FIELD>, ... ],
-    "borrow_items":  [ <SERIALIZED ITEMS WITHOUT BORROWER FIELD>, ... ],
-    "saved_items":  [ <SERIALIZED ITEMS WITHOUT BORROWER FIELD>, ... ]
+    "lend_items": [ <SERIALIZED ITEMS>, ... ],
+    "borrow_items":  [ <SERIALIZED ITEMS>, ... ],
+    "saved_items":  [ <SERIALIZED ITEMS>, ... ]
     "num_transactions": <NUMBER OF TRANSACTIONS THE USER DID>,
     "num_ratings": <NUMBER OF RATINGS ON THIS USER>
 }
@@ -259,11 +275,11 @@ Response:
 <summary>Failure Responses</summary>
 <br>
 Failure Responses:<br />
-user not found
+The user was not found
 
 ```
 <HTTP STATUS CODE 404>
-{"error": "user not found"}
+{"error": "This user was not found."}
 ```
 
 </details>
@@ -363,31 +379,31 @@ Response:
 <details>
 <summary>Failure Responses</summary>
 <br>
-user not found
+The user was not found
 
 ```
 <HTTP STATUS CODE 404>
-{"error": "user not found"}
+{"error": "This user was not found."}
 ```
 
-any of item_name, due_date_str, location, credit, is_borrow_type is None
-
-```
-<HTTP STATUS CODE 400>
-{"error": "Missing parameters!"}
-```
-
-due_date not in proper format
+Any of item_name, due_date, location, credit, is_borrow_type, and image_data is None
 
 ```
 <HTTP STATUS CODE 400>
-{"error": "due_date not in proper format! Please enter Month/Day/Year hour[in 24 hour format]. ex '09/19/18 13'"}
+{"error": "Missing parameters! Please enter item_name, due_date, location, credit, is_borrow_type, and image_data."}
 ```
 
-due_date in the past
+Due_date not in proper format
 
 ```
-{"error": "please enter a date in the future"}
+<HTTP STATUS CODE 400>
+{"error": "The due_date not in the proper format! Please enter Month/Day/Year hour[in 24 hour format]. For example: '09/19/18 13'."}
+```
+
+Due_date is in the past
+
+```
+{"error": "This date already passed. Please enter a date in the future."}
 ```
 
 </details>
@@ -399,6 +415,7 @@ due_date in the past
 Response:
 
 ```
+<HTTP STATUS CODE 200>
 {
     "lending_items": [
         {
@@ -434,17 +451,23 @@ Response:
 Response:
 
 ```
-{"lending items": [{"id": 2, "item_name": "Pot"}, <PARTIALLY SERIALIZED ITEMS> ... ]}
+<HTTP STATUS CODE 200>
+{
+    "lending items": [
+        {"id": 2, "item_name": "Pot"}, 
+        <PARTIALLY SERIALIZED ITEMS> ... 
+        ]
+}
 ```
 
 <details>
 <summary>Failure Responses</summary>
 <br>
-user not found
+The user not found
 
 ```
 <HTTP STATUS CODE 404>
-{"error": "user not found"}
+{"error": "This user was not found."}
 ```
 
 </details>
@@ -456,6 +479,7 @@ user not found
 Response:
 
 ```
+<HTTP STATUS CODE 200>
 {
     "borrow_requests": [
         {
@@ -491,14 +515,20 @@ Response:
 Response:
 
 ```
-{"borrow requests": [{"id": 1, "item_name": "Umbrella"}, <PARTIALLY SERIALIZED ITEMS> ...]}
+<HTTP STATUS CODE 200>
+{
+    "borrow requests": [
+        {"id": 1, "item_name": "Umbrella"}, 
+        <PARTIALLY SERIALIZED ITEMS> ...
+    ]
+}
 ```
 
 <details>
 <summary>Failure Responses</summary>
 <br>
 Failure Responses:<br />
-user not found
+The user was not found.
 
 ```
 <HTTP STATUS CODE 404>
@@ -512,9 +542,10 @@ user not found
 **GET** `/api/items/saved/<int:user_id>/`
 
 Response:
-
+<HTTP STATUS CODE 200>
 ```
-{"saved items": [
+{
+    "saved items": [
         {
             "id": 1, 
             "item_name": "Pot"
@@ -527,11 +558,11 @@ Response:
 <details>
 <summary>Failure Responses</summary>
 <br>
-user not found
+The user was not found
 
 ```
 <HTTP STATUS CODE 404>
-{"error": "user not found"}
+{"error": "This user was not found."}
 ```
 
 </details>
