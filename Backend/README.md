@@ -1,6 +1,6 @@
-URL: http://34.86.48.110/
-Dockerhub: https://hub.docker.com/repository/docker/sazhang02/shareverse
-S3 Bucket for Images: 
+URL: http://34.86.48.110/ <br>
+Dockerhub: https://hub.docker.com/repository/docker/sazhang02/shareverse <br>
+
 # USER ENDPOINTS
 
 ## Get all users
