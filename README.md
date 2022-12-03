@@ -1,7 +1,6 @@
 # FA22-HackChallenge
-
-App Name: ShareVerse
 ![ShareVerse](shareverse_backdrop.png)
+App Name: ShareVerse
 
 App Tagline: A eco-friendly universe of shared goods.
 
@@ -29,14 +28,39 @@ your temporary living accomodations. Avoid long trips to the go shopping. Build 
 ## Screens
 ### Login Page
 ![Login](login.png)
+Users can log in or register to join the ShareVerse community.
 ### Lend Page
 ![Lend](lend.png)
+Students can request to borrow items from other students. These
+requests will be displayed on this page. Users can browse items that other 
+students are offering to lend!
+
+Looking for something specific? Users can lookup items or filter by different category. 
+
+Want to save something for later? Click on the pin and bookmark a post.
+
+If a user wants to borrow one of these items, they can click on the respective item. Then they will be brought to a page with more details and the ability to get in contact with the lender.
 ### Request Page
 ![Request](request.png)
+Students can request to borrow items from other students. These
+requests will be displayed on this page. Users can browse through this page to
+see what kind of items people want to borrow!
+
+Looking for something specific? Users can lookup items or filter by different category. 
+
+Want to save something for later? Click on the pin and bookmark a post.
+
+If a user wants to lend out one of these items, they can click on the respective
+item. Then they will be brought to a page with more details and the ability 
+to get in contact with the lender.
 ### Pop-up to Borrow an Item
 ![Borrow](borrow_request.png)
+Here is a pop-up that results from interacting with an post on the lending page.
+This student is offering a desk organizer. The user can browse different images
+of the item and send a borrow request to establish an exchange between them.
 ### Account Page
 ![Account](account.png)
+The user can see what items they have requested to borrow and offered to lend.
 
 A list of how your app addresses each of the requirements
 
