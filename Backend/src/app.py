@@ -35,11 +35,14 @@ def upload(image_data):
     then storing/returning the URL of that image
     """
     if image_data is None:
-        return failure_response("No base64 image found",)
-    asset = Asset(image_data = image_data)
-    db.session.add(asset)
-    db.session.commit()
-    return asset.serialize().get("url")
+        return failure_response("No base64 image found")
+    try:
+        asset = Asset(image_data = image_data)
+        db.session.add(asset)
+        db.session.commit()
+        return asset.serialize().get("url")
+    except:
+        return failure_response("Failed to upload image", 400)
 
 # --------------------------------------------------------------
 # --------------------------------------------------------------
@@ -110,9 +113,9 @@ def create_user():
     if username is None or email is None:
         return failure_response("Please provide a username and email.",400)
 
-    valid_email, failure_response = is_valid_email(email)
+    valid_email, failure = is_valid_email(email)
     if not valid_email:
-        return failure_response
+        return failure
 
     new_user = User(
         username= username,
@@ -144,17 +147,20 @@ def update_user(user_id):
     image_data=body.get("image_data")
 
     if email is not None:
-        valid_email, failure_response = is_valid_email(email)
+        valid_email, failure = is_valid_email(email)
         if not valid_email:
-            return failure_response
+            return failure
         user.email = email
     
     if username is not None:
         user.username = username
         
-    if image_data is not None:
-        user.profile_image_url = upload(image_data)
-    db.session.commit()
+    # if image_data is not None:
+    #     user.profile_image_url = upload(image_data)
+    try:
+        db.session.commit()
+    except:
+        db.session.rollback()
     return success_response(user.serialize(), 201)
 
 
@@ -306,8 +312,7 @@ def create_item(user_id):
         due_date is None or 
         location is None or
         credit is None or
-        is_borrow_type is None or
-        image_data is None):
+        is_borrow_type is None ):
         return failure_response("Missing parameters! Please enter item_name, due_date, location, credit, is_borrow_type, and image_data.", 400)
 
     success, response = is_valid_date(due_date)
@@ -315,7 +320,9 @@ def create_item(user_id):
         return response
     else:
         due_date = response
-
+    if image_data is not None:
+        image_data = upload(image_data)
+    
     # Create an item
     new_item = Item(
         item_name = item_name,
@@ -324,7 +331,7 @@ def create_item(user_id):
         poster_id = user_id,
         credit = credit,
         is_borrow_type = is_borrow_type,
-        image_url = upload(image_data),
+        image_url = image_data,
         is_unfulfilled = True,
         poster_is_rated = False,
         fulfiller_is_rated = False
@@ -505,7 +512,8 @@ def rate_transaction(item_id):
 
     if type(rating) != float or rating > 5 or rating < 0:
         return failure_response("Invalid rating. Please put in an number from 0 to 5.", 403)
-
+    if user_being_rated is None:
+        return failure_response("The user being rated does not exist", 404)
     total_rating_sum = user_being_rated.rating * (user_being_rated.num_ratings)
     total_rating_sum += rating # Add this new rating
     user_being_rated.num_ratings += 1
