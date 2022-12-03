@@ -262,6 +262,7 @@ def create_item(user_id):
         is_unfulfilled = True
     )
 
+
     # Add item to the user's lending/borrowing list
     if is_borrow_type == True:
         # print("<><><><><><><><><>><<><<><<><><><><>><",user.items)
@@ -356,8 +357,9 @@ def delete_item(user_id, item_id):
         return failure_response("item not found")
     if item.poster_id != user_id:
         return failure_response("user does not have permission to edit this post")
-    # TODO CANNOT DELETE IF IS A FULFILLER
-
+    # TODO CANNOT DELETE IF IS A FULFILLER. If it has a fulfiller and is past the deadline, can still delete?
+    if item.fulfiller_id != None and datetime.now() < item.due_date:
+        return failure_response("The transaction is still in progress")
     db.session.delete(item)
     db.session.commit()
     return success_response(item.serialize(), 201)
