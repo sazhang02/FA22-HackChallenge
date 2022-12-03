@@ -13,14 +13,16 @@ Response:
         {
             "id": 1,
             "username": "best_app_2022",
-            "email": "shareverse@gmail.com",
+            "email": "shareverse@cornell.edu",
             "credit": 20,
             "rating": 5,
             "profile_image_url": null,
             "lend_items": [],
             "borrow_items": [],
-            "saved_items": []
-        }, <SERIALIZED USERS>... 
+            "saved_items": [],
+            "num_transactions": 0,
+            "num_ratings": 1
+        }
     ]
 }
 ```
@@ -36,13 +38,15 @@ Response:
 {
     "id": <ID>,
     "username": "best_app_2022",
-    "email": "shareverse@gmail.com",
+    "email": "shareverse@cornell.edu",
     "credit": 20,
     "rating": 5,
     "profile_image_url": null,
     "lend_items": [],
     "borrow_items": [],
-    "saved_items": []
+    "saved_items": [],
+    "num_transactions": 0,
+    "num_ratings": 1
 }
 ```
 
@@ -75,13 +79,15 @@ Response:
 {
     "id": <ID>,
     "username": "best_app_2022",
-    "email": "shareverse@gmail.com",
+    "email": "shareverse@cornell.edu",
     "credit": 20,
     "rating": 5,
     "profile_image_url": null,
     "lend_items": [],
     "borrow_items": [],
-    "saved_items": []
+    "saved_items": [],
+    "num_transactions": 0,
+    "num_ratings": 1
 }
 ```
 
@@ -95,12 +101,27 @@ username or email field not provided
 {"error": "please provide a username and email"}
 ```
 
-email not valid
+Invalid email address
 
 ```
 <HTTP STATUS CODE 400>
-{"error": "email not valid"}
+{"error": "This is not a valid email address."}
 ```
+
+Not Cornell email address
+
+```
+<HTTP STATUS CODE 403>
+{"error": "Please use a Cornell email address"}
+```
+
+User with email already exists
+
+```
+<HTTP STATUS CODE 403>
+{"error": "A user with this email already exists. Please use a new email address."}
+```
+
 </details>
 
 ## Update user by id
@@ -112,8 +133,8 @@ Request:
 ```
 {
   "username": "new_username_2022",
-  "email": "made_a_new_email@gmail.com",
-  "profile_image_url": "www.mynewprofileimage.com"
+  "email": "new_email@gmail.com",
+  "image_data": <base64 string of image>
 }
 ```
 
@@ -124,16 +145,17 @@ Response:
 ```
 <HTTP STATUS CODE 200>
 {
-  {
-    "id": <ID>,
+    "id": <user_id>,
     "username": "new_username_2022",
-    "email": "made_a_new_email@gmail.com",
-    "credit": <STORED CREDIT BALANCE FOR USER WITH ID {id}>,
-    "rating": <STORED RATING FOR USER WITH ID {id}>,
-    "profile_image_url": "www.mynewprofileimage.com",
-    "lend_items": [ <SERIALIZED ITEMS WITHOUT LENDER FIELD>, ... ],
-    "borrow_items": [ <SERIALIZED ITEMS WITHOUT BORROWER FIELD>, ... ],
-    "saved_items": [ <SERIALIZED ITEMS>, ... ],
+    "email": "new_email@cornell.edu",
+    "credit": 20,
+    "rating": 5,
+    "profile_image_url": <image_url>,
+    "lend_items": [],
+    "borrow_items": [],
+    "saved_items": [],
+    "num_transactions": 0,
+    "num_ratings": 1
 }
 ```
 
@@ -148,6 +170,28 @@ user not found
 ```
 
 Note: There is no failure response if the email is invalid, but if the email is invalid, the email field will not be updated.
+
+Invalid email address
+
+```
+<HTTP STATUS CODE 400>
+{"error": "This is not a valid email address."}
+```
+
+Not Cornell email address
+
+```
+<HTTP STATUS CODE 403>
+{"error": "Please use a Cornell email address"}
+```
+
+User with email already exists
+
+```
+<HTTP STATUS CODE 403>
+{"error": "A user with this email already exists. Please use a new email address."}
+```
+
 </details>
 
 ## Delete user by id
@@ -159,14 +203,17 @@ Response:
 ```
 <HTTP STATUS CODE 200>
 {
-  "id": <ID>,
-  "username": <STORED USERNAME FOR USER WITH ID {id}>,
-  "email": <STORED EMAIL FOR USER WITH ID {id}>,
-  "credit": <STORED CREDIT BALANCE FOR USER WITH ID {id}>
-  "rating": <STORED RATING FOR USER WITH ID {id}>
-  "profile_image_url": <OPTIONAL STORED PROFILE IMAGE URL FOR USER WITH ID {id}>
-  "lend_items": [ <SERIALIZED ITEMS WITHOUT LENDER FIELD>, ... ]
-  "borrow_items": [ <SERIALIZED ITEMS WITHOUT BORROWER FIELD>, ... ]
+    "id": <ID>,
+    "username": <STORED USERNAME FOR USER WITH ID {id}>,
+    "email": <STORED EMAIL FOR USER WITH ID {id}>,
+    "credit": <STORED CREDIT BALANCE FOR USER WITH ID {id}>
+    "rating": <STORED RATING FOR USER WITH ID {id}>
+    "profile_image_url": <OPTIONAL STORED PROFILE IMAGE URL FOR USER WITH ID {id}>,
+    "lend_items": [ <SERIALIZED ITEMS WITHOUT LENDER FIELD>, ... ],
+    "borrow_items":  [ <SERIALIZED ITEMS WITHOUT BORROWER FIELD>, ... ],
+    "saved_items":  [ <SERIALIZED ITEMS WITHOUT BORROWER FIELD>, ... ]
+    "num_transactions": <NUMBER OF TRANSACTIONS THE USER DID>,
+    "num_ratings": <NUMBER OF RATINGS ON THIS USER>
 }
 ```
 
@@ -180,6 +227,7 @@ user not found
 <HTTP STATUS CODE 404>
 {"error": "user not found"}
 ```
+
 </details>
 
 # ITEM ENDPOINTS
@@ -207,7 +255,7 @@ Response:
                 "profile_image_url": null
             },
             "fulfiller_user": null,
-            "credit_value": 5,
+            "credit": 5,
             "is_borrow_type": true,
             "is_unfulfilled": true,
             "image_url": "image.jpg"
@@ -224,12 +272,12 @@ Request:
 
 ```
 {
-    "item_name":"Umbrella",
-    "location":"Central Campus",
-    "credit_value":5,
-    "is_borrow_type":true,
-    "image_url":"image.jpg",
-    "due_date":"12/1/23 12"
+   "item_name":"Pot",
+    "location":"North Campus",
+    "credit":15,
+    "is_borrow_type":false,
+    "image_data":<BASE64 IMAGE STRING>,
+    "due_date":"1/6/23 17"
 }
 ```
 
@@ -244,7 +292,7 @@ There are two different types of posts: unfulfilled and in progress.
 
 If is_unfulfilled is true, then this is no one has responded to this post -- no one has accepting this borrow request or no one has took this offer to lend an item.
 
-Otherwise, we know that this post is in progress -- there are two users that are working on this shared "transaction". When the transaction is completed, it will be removed from our database (no history).
+Otherwise, we know that this post is in progress -- there are two users that are working on this shared "transaction". In that case, the user will no longer be able to edit the details of the post.
 
 Response:
 
@@ -252,21 +300,25 @@ Response:
 <HTTP STATUS CODE 201>
 {
     "id": <ID>,
-    "item_name": "Umbrella",
-    "due_date": "12/01/2023 12",
-    "location": "Central Campus",
+    "item_name": "Pot",
+    "due_date": "01/06/2023 17",
+    "location": "North Campus",
     "poster_user": {
         "id": <user_id>,
-        "username": <USER NAME>,
-        "credit": <USER CREDIT>,
-        "rating": <USER RATING>,
-        "profile_image_url": <USER PROFILE IMAGE>
+        "email": <STORED EMAIL FOR USER WITH ID {id}>,
+        "credit": <STORED CREDIT BALANCE FOR USER WITH ID {id}>
+        "rating": <STORED RATING FOR USER WITH ID {id}>
+        "profile_image_url": <OPTIONAL STORED PROFILE IMAGE URL FOR USER WITH ID {id}>,
+        "num_transactions": <NUMBER OF TRANSACTIONS THE USER DID>,
+        "num_ratings": <NUMBER OF RATINGS ON THIS USER>
     },
     "fulfiller_user": null,
-    "credit_value": 5,
-    "is_borrow_type": true,
+    "credit": 15,
+    "is_borrow_type": false,
     "is_unfulfilled": true,
-    "image_url": "image.jpg"
+    "image_url": "https://shareverse.s3.us-east-1.amazonaws.com/<IMAGE HASH>.jpg",
+    "poster_is_rated": false,
+    "fulfiller_is_rated": false
 }
 ```
 
@@ -280,7 +332,7 @@ user not found
 {"error": "user not found"}
 ```
 
-any of item_name, due_date_str, location, credit_value, is_borrow_type is None
+any of item_name, due_date_str, location, credit, is_borrow_type is None
 
 ```
 <HTTP STATUS CODE 400>
@@ -299,6 +351,7 @@ due_date in the past
 ```
 {"error": "please enter a date in the future"}
 ```
+
 </details>
 
 ## Get all lending items
@@ -309,25 +362,29 @@ Response:
 
 ```
 {
-    "lending items": [
+    "lending_items": [
         {
-            "id": 2,
+            "id": 1,
             "item_name": "Pot",
             "due_date": "01/06/2023 17",
             "location": "North Campus",
             "poster_user": {
-                "id": 1,
-                "username": "best_app_2022",
-                "credit": 20,
-                "rating": 5,
-                "profile_image_url": null
+                "id": <user_id>,
+                "email": <STORED EMAIL FOR USER WITH ID {id}>,
+                "credit": <STORED CREDIT BALANCE FOR USER WITH ID {id}>
+                "rating": <STORED RATING FOR USER WITH ID {id}>
+                "profile_image_url": <OPTIONAL STORED PROFILE IMAGE URL FOR USER WITH ID {id}>,
+                "num_transactions": <NUMBER OF TRANSACTIONS THE USER DID>,
+                "num_ratings": <NUMBER OF RATINGS ON THIS USER>
             },
             "fulfiller_user": null,
-            "credit_value": 15,
+            "credit": 15,
             "is_borrow_type": false,
             "is_unfulfilled": true,
-            "image_url": "image.jpg"
-        }, <SERIALIZED ITEMS> ... 
+            "image_url": "https://shareverse.s3.us-east-1.amazonaws.com/<Image Hash>.jpg",
+            "poster_is_rated": false,
+            "fulfiller_is_rated": false
+            } <SERIALIZED ITEMS> ... 
     ]
 }
 ```
@@ -351,6 +408,7 @@ user not found
 <HTTP STATUS CODE 404>
 {"error": "user not found"}
 ```
+
 </details>
 
 ## Get all item borrowing request
@@ -361,25 +419,29 @@ Response:
 
 ```
 {
-    "borrow requests": [
+    "borrow_requests": [
         {
-            "id": 1,
-            "item_name": "Umbrella",
-            "due_date": "12/01/2022 12",
-            "location": "Central Campus",
+            "id": <ID>,
+            "item_name": <ITEM NAME>,
+            "due_date": <DUE DATE>,
+            "location": <LOCATION>,
             "poster_user": {
-                "id": 1,
-                "username": "best_app_2022",
-                "credit": 20,
-                "rating": 5,
-                "profile_image_url": null
+                "id": <user_id>,
+                "email": <STORED EMAIL FOR USER WITH ID {id}>,
+                "credit": <STORED CREDIT BALANCE FOR USER WITH ID {id}>
+                "rating": <STORED RATING FOR USER WITH ID {id}>
+                "profile_image_url": <OPTIONAL STORED PROFILE IMAGE URL FOR USER WITH ID {id}>,
+                "num_transactions": <NUMBER OF TRANSACTIONS THE USER DID>,
+                "num_ratings": <NUMBER OF RATINGS ON THIS USER>
             },
-            "fulfiller_user": null,
-            "credit_value": 5,
+            "fulfiller_user": <FULFILLER ID IF THERE IS ONE,OTHERWISE NULL>,
+            "credit": 15,
             "is_borrow_type": true,
             "is_unfulfilled": true,
-            "image_url": "image.jpg"
-        }, <SERIALIZED ITEMS> ... 
+            "image_url": "https://shareverse.s3.us-east-1.amazonaws.com/<Image Hash>.jpg",
+            "poster_is_rated": <BOOL, TRUE IF THERE IS A TRANSACTION RATING ON THE POSTER>,
+            "fulfiller_is_rated": <BOOL, TRUE IF THERE IS A TRANSACTION RATING ON THE FULFILLER>
+            } <SERIALIZED ITEMS> ... 
     ]
 }
 ```
@@ -404,6 +466,7 @@ user not found
 <HTTP STATUS CODE 404>
 {"error": "user not found"}
 ```
+
 </details>
 
 ## Get all saved items of a user
@@ -416,7 +479,7 @@ Response:
 {"saved items": [
         {
             "id": 1, 
-            "item_name": "Umbrella"
+            "item_name": "Pot"
         }, 
         <PARTIALLY SERIALIZED ITEMS> ...
     ]
@@ -432,20 +495,22 @@ user not found
 <HTTP STATUS CODE 404>
 {"error": "user not found"}
 ```
+
 </details>
 
 ## Update a post for an item made by a user
 
 **POST** `/api/items/<int:user_id>/<int:item_id>/`
-
+Note: each of the field is optional
 Request:
 
 ```
 {
     "item_name": "Umbrella",
-    "location": "North Campus",
-    "credit_value": 10,
-    "image_url": "new_image.jpg"
+    "location": "Central Campus",
+    "credit": 10,
+    "due_date": "2/7/24 17"
+    "image_data": <BASE64 string>
 }
 ```
 
@@ -454,22 +519,26 @@ Response:
 ```
 <HTTP STATUS CODE 201>
 {
-    "id": <ID>,
+    "id": <IF>,
     "item_name": "Umbrella",
-    "due_date": "12/01/2023 12",
-    "location": "North Campus",
+    "due_date": "02/07/2024 17",
+    "location": "Central Campus",
     "poster_user": {
         "id": <user_id>,
-        "username": <USER NAME>,
-        "credit": <USER CREDIT>,
-        "rating": <USER RATING>,
-        "profile_image_url": <USER PROFILE IMAGE>
+        "email": <STORED EMAIL FOR USER WITH ID {id}>,
+        "credit": <STORED CREDIT BALANCE FOR USER WITH ID {id}>
+        "rating": <STORED RATING FOR USER WITH ID {id}>
+        "profile_image_url": <OPTIONAL STORED PROFILE IMAGE URL FOR USER WITH ID {id}>,
+        "num_transactions": <NUMBER OF TRANSACTIONS THE USER DID>,
+        "num_ratings": <NUMBER OF RATINGS ON THIS USER>
     },
     "fulfiller_user": null,
-    "credit_value": 10,
-    "is_borrow_type": true,
+    "credit": 10,
+    "is_borrow_type": false,
     "is_unfulfilled": true,
-    "image_url": "new_image.jpg"
+    "image_url": "https://shareverse.s3.us-east-1.amazonaws.com/<IMAGE HASH>.jpg",
+    "poster_is_rated": false,
+    "fulfiller_is_rated": false
 }
 ```
 
@@ -497,7 +566,6 @@ The user that is trying to update this post is not the original poster
 {"error": "user does not have permission to edit this post"}
 ```
 
-
 This post has been accepted between two users, so we should not allow any edits to the post after this point.
 
 ```
@@ -507,19 +575,9 @@ This post has been accepted between two users, so we should not allow any edits 
 
 </details>
 
-
-
 ## Save a post for an item to a user bookmarks
 
-**POST** `/api/items/saved/<int:user_id>/`
-
-Request:
-
-```
-{
-    "item_id": <ID>
-}
-```
+**POST** `/api/items/saved/<int:user_id>/<int:item_id>`
 
 Response:
 
@@ -527,8 +585,8 @@ Response:
 <HTTP STATUS CODE 201>
 {
     "id": <ID>,
-    "item_name": "Umbrella",
-    "due_date": "12/01/2023 12",
+    "item_name": "Pot",
+    "due_date": "01/06/2023 17",
     "location": "North Campus",
     "poster_user": {
         "id": <user_id>,
@@ -538,10 +596,12 @@ Response:
         "profile_image_url": <USER PROFILE IMAGE>
     },
     "fulfiller_user": null,
-    "credit_value": 10,
+    "credit": 15,
     "is_borrow_type": true,
     "is_unfulfilled": true,
-    "image_url": "new_image.jpg"
+    "image_url": "https://shareverse.s3.us-east-1.amazonaws.com/AV862OZJRDADGS60.jpg",
+    "poster_is_rated": false,
+    "fulfiller_is_rated": false
 }
 ```
 
@@ -563,15 +623,15 @@ The provided item cannot be found.
 ```
 
 The user has already saved this item.
+
 ```
 <HTTP STATUS CODE 404>
 {"error": "item already saved"}
 ```
+
 </details>
 
-
-
-## Delete a post for an item a user 
+## Delete a post for an item a user
 
 **DELETE** `/api/items/saved/<int:user_id>/`
 
@@ -592,7 +652,7 @@ Response:
         "profile_image_url": <USER PROFILE IMAGE>
     },
     "fulfiller_user": null,
-    "credit_value": 10,
+    "credit": 10,
     "is_borrow_type": true,
     "is_unfulfilled": true,
     "image_url": "new_image.jpg"
@@ -617,9 +677,10 @@ The provided item cannot be found.
 ```
 
 The user that wants to delete this post is not the poster.
+
 ```
 <HTTP STATUS CODE 404>
 {"error": "user does not have permission to edit this post"}
 ```
-</details>
 
+</details>
